@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>진직도 분석기</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        .container { width: 80%; margin: auto; }
+        canvas { max-width: 100%; }
+        input, button { margin: 5px; padding: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>진직도 분석기</h2>
+        <label>구간 수: <input type="number" id="numSections" value="10" onchange="generateInputs()"></label>
+        <label>구간 간격(mm): <input type="number" id="interval" value="10"></label>
+        <button onclick="generateInputs()">데이터 입력</button>
+        <div id="dataInputs"></div>
+        <button onclick="analyze()">분석 시작</button>
+        <canvas id="originalChart"></canvas>
+        <canvas id="shiftedChart"></canvas>
+        <h3 id="result"></h3>
+    </div>
+
+    <script>
+        let originalChart = null;
+        let shiftedChart = null;
+
+        function generateInputs() {
+            let num = document.getElementById("numSections").value;
+            let inputArea = document.getElementById("dataInputs");
+            inputArea.innerHTML = "<h3>오차값 입력 (µm)</h3>";
+            for (let i = 0; i < num; i++) {
+                inputArea.innerHTML += `<label>${i+1} 구간: <input type="number" step="0.1" id="value${i}"></label><br>`;
+            }
+        }
+
+        function analyze() {
+            let num = parseInt(document.getElementById("numSections").value);
+            let interval = parseFloat(document.getElementById("interval").value);
+            let values = [];
+            for (let i = 0; i < num; i++) {
+                values.push(parseFloat(document.getElementById(`value${i}`).value) || 0);
+            }
+
+            let xData = Array.from({length: num}, (_, i) => i * interval);
+            drawChart("originalChart", xData, values, "원본 데이터 (µm)", true);
+
+            // 시작점과 끝점을 0으로 맞추는 변환
+            let startValue = values[0];
+            let endValue = values[num - 1];
+            let adjustedValues = values.map((v, i) => v - (startValue + (endValue - startValue) * (i / (num - 1))));
+            
+            let minVal = Math.min(...adjustedValues);
+            let maxVal = Math.max(...adjustedValues);
+            let straightness = maxVal - minVal;
+
+            drawChart("shiftedChart", xData, adjustedValues, "보정된 데이터 (µm)", false);
+            document.getElementById("result").innerText = `진직도 오차: ${straightness.toFixed(3)} µm`;
+        }
+
+        function drawChart(canvasId, xData, yData, label, isOriginal) {
+            let ctx = document.getElementById(canvasId).getContext("2d");
+            if (isOriginal && originalChart) {
+                originalChart.destroy();
+            } else if (!isOriginal && shiftedChart) {
+                shiftedChart.destroy();
+            }
+            
+            let newChart = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: xData,
+                    datasets: [{ 
+                        label: label, 
+                        data: yData, 
+                        borderColor: isOriginal ? "blue" : "darkgreen", 
+                        fill: false 
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            grid: {
+                                color: "rgba(0, 0, 0, 0.2)", // 구간마다 수직선 추가
+                                drawTicks: false
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: "rgba(0, 0, 0, 0.2)",
+                                drawTicks: false
+                            },
+                            ticks: {
+                                stepSize: 1 // Y축 1µm 간격
+                            }
+                        }
+                    }
+                }
+            });
+
+            if (isOriginal) {
+                originalChart = newChart;
+            } else {
+                shiftedChart = newChart;
+            }
+        }
+    </script>
+</body>
+</html>
+
