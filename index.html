@@ -3,24 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>진직도(Straightness) 분석기</title>
+    <title>진직도(Straightness) 분석 프로그램</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; }
         .container { width: 80%; margin: auto; }
         canvas { max-width: 100%; }
         input, button { margin: 5px; padding: 8px; }
+        .header { display: flex; justify-content: space-between; align-items: center; }
+        .input-group { margin-top: 10px; display: flex; flex-direction: column; align-items: center; }
+        .button-group { display: flex; justify-content: center; margin-top: 10px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>진직도 분석기</h2>
-        <div style="float:right; font-weight:bold;">Made by Yachmo</div>
-        <label>구간 수: <input type="number" id="numSections" value="10" onchange="generateInputs()"></label>
-        <label>구간 간격(mm): <input type="number" id="interval" value="10"></label>
-        <button onclick="generateInputs()">데이터 입력</button>
+        <div class="header">
+            <h2>진직도 분석기</h2>
+            <span style="font-weight: bold;">Made by Yachmo</span>
+        </div>
+        <div class="input-group">
+            <label>구간 수: <input type="number" id="numSections" value="10" onchange="generateInputs()"></label>
+            <label>구간 간격(mm): <input type="number" id="interval" value="10"></label>
+        </div>
+        <div class="button-group">
+            <button onclick="generateInputs()">데이터 입력</button>
+        </div>
         <div id="dataInputs"></div>
-        <button onclick="analyze()">분석 시작</button>
+        <div class="button-group">
+            <button onclick="analyze()">분석 시작</button>
+        </div>
         <canvas id="originalChart"></canvas>
         <canvas id="shiftedChart"></canvas>
         <h3 id="result"></h3>
