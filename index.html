@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>진직도 분석기</title>
+    <title>진직도(Straightness) 분석기</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; }
@@ -15,6 +15,7 @@
 <body>
     <div class="container">
         <h2>진직도 분석기</h2>
+        <div style="float:right; font-weight:bold;">Made by Yachmo</div>
         <label>구간 수: <input type="number" id="numSections" value="10" onchange="generateInputs()"></label>
         <label>구간 간격(mm): <input type="number" id="interval" value="10"></label>
         <button onclick="generateInputs()">데이터 입력</button>
@@ -44,6 +45,11 @@
             let values = [];
             for (let i = 0; i < num; i++) {
                 values.push(parseFloat(document.getElementById(`value${i}`).value) || 0);
+            }
+
+            if (values.length < 3 || new Set(values).size === 1) {
+                alert("데이터는 최소 3개 이상 입력해야 합니다.");
+                return;
             }
 
             let xData = Array.from({length: num}, (_, i) => i * interval);
@@ -112,4 +118,3 @@
     </script>
 </body>
 </html>
-
