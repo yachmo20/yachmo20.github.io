@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A축 정렬 계산기</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #f0f0f0;
+      font-family: sans-serif;
+    }
+    .container {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: flex-start;
+      max-width: 1000px;
+      margin: auto;
+      gap: 20px;
+      padding: 20px;
+    }
+    .image {
+      flex: 1;
+    }
+    .ui {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: #fff;
+      border: 2px solid #000;
+      padding: 15px;
+      border-radius: 8px;
+    }
+    .ui label {
+      font-weight: bold;
+    }
+    .ui input, .output {
+      width: 200px;
+      height: 30px;
+      font-size: 1rem;
+      text-align: center;
+    }
+    .btn {
+      width: 80px;
+      height: 35px;
+      background-color: red;
+      color: white;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .output {
+      background-color: #cfc;
+      font-weight: bold;
+      line-height: 30px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="image">
+      <img src="a_axis_image_v01_updated.png" alt="A축 계산 배경" style="width: 100%; height: auto;">
+    </div>
+    <div class="ui">
+      <label for="ma">ma(0도에서 상면 평행도):</label>
+      <input type="number" id="ma" value="1" onfocus="this.value=''">
+      <label for="mb">mb(0도에서 T홈 평행도):</label>
+      <input type="number" id="mb" value="2" onfocus="this.value=''">
+      <label for="ma2">ma'(90도에서 상면 평행도):</label>
+      <input type="number" id="ma2" value="3" onfocus="this.value=''">
+      <label for="mb2">mb'(90도에서 T홈 평행도):</label>
+      <input type="number" id="mb2" value="4" onfocus="this.value=''">
+      <button class="btn" onclick="calculate()">계산</button>
+      <label>A축선의 높이차</label>
+      <div class="output" id="heightDiff"></div>
+      <label>A축선의 앞뒤거리차</label>
+      <div class="output" id="distanceDiff"></div>
+    </div>
+  </div>
+
+  <script>
+    function calculate() {
+      const ma = parseFloat(document.getElementById('ma').value);
+      const mb = parseFloat(document.getElementById('mb').value);
+      const ma2 = parseFloat(document.getElementById('ma2').value);
+      const mb2 = parseFloat(document.getElementById('mb2').value);
+
+      if (isNaN(ma) || isNaN(mb) || isNaN(ma2) || isNaN(mb2)) {
+        alert('모든 값을 입력해 주세요.');
+        return;
+      }
+
+      const height = ((ma2 - ma) + (mb2 - mb)) / 2;
+      const distance = ((mb2 - mb) - (ma2 - ma)) / 2;
+
+      document.getElementById('heightDiff').textContent = height;
+      document.getElementById('distanceDiff').textContent = distance;
+    }
+  </script>
+</body>
+</html>
+
+
+
