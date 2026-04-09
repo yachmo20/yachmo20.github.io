@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>진직도(Straightness) 분석기</title>
+<style>
+:root {
+  --bg: #0d0f14;
+  --s1: #151820;
+  --s2: #1c2030;
+  --bd: #252a3a;
+  --acc: #3b82f6;
+  --cyn: #22d3ee;
+  --amb: #f59e0b;
+  --red: #ef4444;
+  --grn: #22c55e;
+  --tx:  #e2e8f0;
+  --tx2: #94a3b8;
+  --tx3: #475569;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font-family:'Malgun Gothic','맑은 고딕','Apple SD Gothic Neo',sans-serif;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(59,130,246,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,.04) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+.wrap{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:36px 20px 80px}
+
+/* Header */
+header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:36px;padding-bottom:20px;border-bottom:1px solid var(--bd)}
+.htitle{font-size:20px;font-weight:700;letter-spacing:-.5px}
+.hsub{font-size:12px;color:var(--tx3);margin-top:4px}
+.badge{font-size:11px;color:var(--acc);border:1px solid rgba(59,130,246,.3);padding:4px 10px;border-radius:4px;background:rgba(59,130,246,.06);letter-spacing:1px}
+
+/* Grid */
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+.field{background:var(--s1);border:1px solid var(--bd);border-radius:8px;padding:14px 18px;transition:border-color .2s}
+.field:focus-within{border-color:rgba(59,130,246,.5)}
+.field label{display:block;font-size:11px;color:var(--tx3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:7px}
+.field input{width:100%;background:transparent;border:none;outline:none;color:var(--tx);font-size:18px;font-weight:700}
+.field input::placeholder{color:var(--tx3);font-size:14px;font-weight:400}
+
+/* Data grid */
+.dsec{background:var(--s1);border:1px solid var(--bd);border-radius:8px;margin-bottom:14px;overflow:hidden}
+.dsec-hd{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--bd);background:var(--s2)}
+.dsec-hd span{font-size:12px;color:var(--tx2)}
+.dsec-hd small{font-size:11px;color:var(--tx3)}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:1px;background:var(--bd)}
+.dcell{background:var(--s1);padding:10px 12px}
+.dcell label{display:block;font-size:10px;color:var(--tx3);margin-bottom:5px;letter-spacing:.5px}
+.dcell input{width:100%;background:transparent;border:none;outline:none;color:var(--cyn);font-size:15px;font-weight:700}
+.dcell input::placeholder{color:var(--tx3);font-size:12px;font-weight:400}
+.dcell input:focus{color:var(--tx)}
+
+/* Buttons */
+.btnrow{display:flex;gap:10px;margin-bottom:28px}
+.btn{flex:1;padding:13px 20px;border:none;border-radius:8px;font-size:13px;font-weight:700;letter-spacing:.5px;cursor:pointer;transition:all .2s}
+.btn-p{background:var(--acc);color:#fff}
+.btn-p:hover{background:#2563eb;transform:translateY(-1px)}
+.btn-s{background:var(--s2);color:var(--tx2);border:1px solid var(--bd)}
+.btn-s:hover{border-color:var(--tx3);color:var(--tx)}
+.btn-d{background:rgba(34,211,238,.08);color:var(--cyn);border:1px solid rgba(34,211,238,.2)}
+.btn-d:hover{background:rgba(34,211,238,.15)}
+
+/* Results */
+.results{display:none}
+.results.show{display:block;animation:fadeUp .4s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* Metric cards */
+.mcards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.mcard{background:var(--s1);border:1px solid var(--bd);border-radius:8px;padding:16px 18px;position:relative;overflow:hidden}
+.mcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.m-bl::before{background:var(--acc)} .m-cy::before{background:var(--cyn)}
+.m-am::before{background:var(--amb)} .m-gr::before{background:var(--grn)}
+.m-rd::before{background:var(--red)}
+.mlabel{font-size:10px;color:var(--tx3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:7px}
+.mval{font-size:21px;font-weight:700;color:var(--tx)}
+.munit{font-size:11px;color:var(--tx3);margin-left:3px}
+.msub{font-size:11px;color:var(--tx3);margin-top:5px}
+.verdict{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:5px;font-size:13px;font-weight:700;margin-top:10px}
+.pass{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:var(--grn)}
+.fail{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:var(--red)}
+
+/* Chart cards */
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.ccard{background:var(--s1);border:1px solid var(--bd);border-radius:8px;padding:18px}
+.ccard.full{grid-column:1/-1}
+.ctitle{font-size:11px;color:var(--tx3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:7px}
+.ctitle::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--acc)}
+canvas{display:block;width:100%!important}
+
+/* Table */
+.tcard{background:var(--s1);border:1px solid var(--bd);border-radius:8px;overflow:hidden;margin-bottom:14px}
+.thd{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--bd);background:var(--s2)}
+.thd span{font-size:11px;color:var(--tx3);letter-spacing:.8px;text-transform:uppercase}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{background:var(--s2);padding:9px 14px;text-align:right;font-size:10px;color:var(--tx3);letter-spacing:.8px;font-weight:400;border-bottom:1px solid var(--bd)}
+thead th:first-child{text-align:center}
+tbody tr{border-bottom:1px solid rgba(37,42,58,.6);transition:background .1s}
+tbody tr:hover{background:rgba(255,255,255,.02)}
+tbody tr:last-child{border-bottom:none}
+td{padding:9px 14px;text-align:right;color:var(--tx2)}
+td:first-child{text-align:center;color:var(--tx3)}
+td.cy{color:var(--cyn);font-weight:700} td.pos{color:var(--grn)} td.neg{color:var(--red)} td.am{color:var(--amb);font-weight:700}
+
+footer{text-align:center;padding-top:40px;font-size:11px;color:var(--tx3);letter-spacing:1px}
+@media(max-width:680px){.mcards{grid-template-columns:repeat(2,1fr)}.cgrid{grid-template-columns:1fr}.row2,.row3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div>
+    <div class="htitle">진직도(Straightness) 분석기</div>
+    <div class="hsub">Geometric Accuracy Analysis — Made by Yachmo</div>
+  </div>
+  <div class="badge">OFFLINE v2.0</div>
+</header>
+
+<div class="row2">
+  <div class="field"><label>구간 수 (N)</label><input type="number" id="segN" min="2" max="50" placeholder="예: 9"></div>
+  <div class="field"><label>구간 간격 (mm)</label><input type="number" id="segL" min="0.1" step="0.1" placeholder="예: 100"></div>
+</div>
+<div class="field" style="margin-bottom:14px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+  <label style="font-size:11px;color:var(--tx3);letter-spacing:.8px;text-transform:uppercase;white-space:nowrap">허용 공차</label>
+  <input type="number" id="tol" step="0.001" value="0.020" style="background:var(--s2);border:1px solid var(--bd);border-radius:4px;padding:8px 12px;color:var(--amb);font-size:16px;font-weight:700;width:120px;outline:none">
+  <span style="font-size:12px;color:var(--tx3)">mm  (= <span id="tolMicro">20.0</span> μm)</span>
+</div>
+
+<div class="dsec">
+  <div class="dsec-hd"><span>측정 데이터 입력</span><small>단위: μm (마이크로미터)</small></div>
+  <div class="dgrid" id="dgrid"></div>
+</div>
+
+<div class="btnrow">
+  <button class="btn btn-d" onclick="loadDemo()">▶ 데모 데이터</button>
+  <button class="btn btn-s" onclick="resetAll()">↺ 초기화</button>
+  <button class="btn btn-p" onclick="analyze()">분석 시작 →</button>
+</div>
+
+<div class="results" id="results">
+  <div class="mcards" id="mcards"></div>
+  <div class="cgrid">
+    <div class="ccard full"><div class="ctitle">편차 프로파일 (최소제곱 기준선 보정)</div><canvas id="cProfile" height="260"></canvas></div>
+    <div class="ccard"><div class="ctitle">누적 변위</div><canvas id="cCumul" height="220"></canvas></div>
+    <div class="ccard"><div class="ctitle">구간별 편차 분포</div><canvas id="cBar" height="220"></canvas></div>
+  </div>
+  <div class="tcard">
+    <div class="thd"><span>측정 데이터 테이블</span><span id="tsub"></span></div>
+    <table><thead><tr>
+      <th>측점</th><th>위치 (mm)</th><th>원시값 (μm)</th>
+      <th>기준선 보정 (μm)</th><th>누적 변위 (μm)</th><th>편차 (μm)</th>
+    </tr></thead><tbody id="tbody"></tbody></table>
+  </div>
+</div>
+
+<footer>STRAIGHTNESS ANALYZER // YACHMO // 2025 // OFFLINE BUILD</footer>
+</div>
+
+<script>
+/* ── helpers ── */
+const $ = id => document.getElementById(id);
+
+document.getElementById('tol').addEventListener('input', () => {
+  const v = parseFloat($('tol').value) || 0;
+  $('tolMicro').textContent = (v * 1000).toFixed(1);
+});
+
+function buildGrid() {
+  const n = parseInt($('segN').value);
+  if (!n || n < 2 || n > 50) return;
+  const g = $('dgrid'); g.innerHTML = '';
+  for (let i = 0; i <= n; i++) {
+    const c = document.createElement('div'); c.className = 'dcell';
+    c.innerHTML = `<label>P${i}</label><input type="number" id="p${i}" step="0.001" placeholder="0.000">`;
+    g.appendChild(c);
+  }
+}
+$('segN').addEventListener('change', buildGrid);
+$('segN').addEventListener('input', buildGrid);
+
+function loadDemo() {
+  $('segN').value = 9; $('segL').value = 100; buildGrid();
+  [0,1.2,2.8,3.1,2.5,1.8,3.4,4.1,2.9,1.5].forEach((v,i)=>{ const e=$(`p${i}`); if(e) e.value=v; });
+}
+
+function resetAll() {
+  $('segN').value=''; $('segL').value=''; $('dgrid').innerHTML='';
+  $('results').classList.remove('show');
+}
+
+/* ── ANALYSIS ── */
+function analyze() {
+  const n   = parseInt($('segN').value);
+  const len = parseFloat($('segL').value);
+  const tol = parseFloat($('tol').value) || 0.02;
+  if (!n || n < 2) { alert('구간 수를 입력하세요.'); return; }
+  if (!len || len <= 0) { alert('구간 간격을 입력하세요.'); return; }
+
+  const raw = [];
+  for (let i = 0; i <= n; i++) {
+    const v = parseFloat($(`p${i}`)?.value);
+    if (isNaN(v)) { alert(`P${i} 값을 입력하세요.`); return; }
+    raw.push(v);
+  }
+
+  const pos   = raw.map((_,i) => i * len);
+  const xM    = pos.reduce((a,b)=>a+b,0)/pos.length;
+  const yM    = raw.reduce((a,b)=>a+b,0)/raw.length;
+  const slope = pos.reduce((s,x,i)=>s+(x-xM)*(raw[i]-yM),0) / pos.reduce((s,x)=>s+(x-xM)**2,0);
+  const icept = yM - slope * xM;
+  const ref   = pos.map(x => slope*x + icept);
+  const devs  = raw.map((v,i) => v - ref[i]);
+  const cumul = raw.map(v => v - raw[0]);
+
+  const maxD = Math.max(...devs), minD = Math.min(...devs);
+  const str  = maxD - minD;
+  const rms  = Math.sqrt(devs.reduce((s,d)=>s+d*d,0)/devs.length);
+  const tolU = tol * 1000;
+  const pass = str <= tolU;
+
+  /* metrics */
+  $('mcards').innerHTML = `
+    <div class="mcard ${pass?'m-gr':'m-rd'}">
+      <div class="mlabel">진직도 (P-V)</div>
+      <div class="mval">${str.toFixed(3)}<span class="munit">μm</span></div>
+      <div class="msub">공차: ${tolU.toFixed(1)} μm</div>
+      <div class="verdict ${pass?'pass':'fail'}">${pass?'✓ PASS':'✗ FAIL'}</div>
+    </div>
+    <div class="mcard m-bl">
+      <div class="mlabel">RMS 편차</div>
+      <div class="mval">${rms.toFixed(3)}<span class="munit">μm</span></div>
+      <div class="msub">제곱평균제곱근</div>
+    </div>
+    <div class="mcard m-cy">
+      <div class="mlabel">최대 편차 (+)</div>
+      <div class="mval">${maxD.toFixed(3)}<span class="munit">μm</span></div>
+      <div class="msub">기준선 상방</div>
+    </div>
+    <div class="mcard m-am">
+      <div class="mlabel">최소 편차 (−)</div>
+      <div class="mval">${minD.toFixed(3)}<span class="munit">μm</span></div>
+      <div class="msub">기준선 하방</div>
+    </div>`;
+
+  /* charts */
+  drawProfile($('cProfile'), pos, devs, tolU, len);
+  drawLine($('cCumul'), pos, cumul, '#22d3ee', '누적변위', len);
+  drawBar($('cBar'), pos, devs, len);
+
+  /* table */
+  const maxA = Math.max(...devs.map(Math.abs));
+  $('tbody').innerHTML = devs.map((d,i) => {
+    const isM = Math.abs(d) === maxA;
+    const cl  = isM ? 'am' : d > 0 ? 'pos' : d < 0 ? 'neg' : '';
+    return `<tr>
+      <td>P${i}</td><td>${pos[i].toFixed(1)}</td><td>${raw[i].toFixed(3)}</td>
+      <td class="${isM?'am':'cy'}">${d.toFixed(3)}</td>
+      <td>${cumul[i].toFixed(3)}</td>
+      <td class="${cl}">${d>=0?'+':''}${d.toFixed(3)}</td></tr>`;
+  }).join('');
+  $('tsub').textContent = `총 ${n+1}점 · 측정 길이 ${(n*len).toFixed(0)} mm`;
+
+  $('results').classList.add('show');
+  $('results').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+/* ══════════════════════════════════════════
+   CANVAS CHART ENGINE
+══════════════════════════════════════════ */
+const CLR = {
+  grid:'rgba(37,42,58,0.9)', text:'#475569', text2:'#94a3b8',
+  blue:'#3b82f6', cyan:'#22d3ee', green:'#22c55e', red:'#ef4444', amber:'#f59e0b',
+  blueFill:'rgba(59,130,246,0.08)', cyanFill:'rgba(34,211,238,0.07)'
+};
+
+function setupCanvas(canvas) {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const W = rect.width  || canvas.parentElement.clientWidth || 600;
+  const H = parseInt(canvas.getAttribute('height')) || 240;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  return { ctx, W, H, dpr };
+}
+
+function chartLayout(W, H) {
+  return { l:52, r:16, t:16, b:44,
+    iW: W - 52 - 16, iH: H - 16 - 44 };
+}
+
+function drawAxes(ctx, W, H, lay, xLabels, yMin, yMax) {
+  const {l,r,t,b,iW,iH} = lay;
+  ctx.strokeStyle = CLR.grid; ctx.lineWidth = 1;
+
+  /* Y gridlines + labels */
+  const yTicks = niceTicksY(yMin, yMax, 5);
+  yTicks.forEach(tick => {
+    const y = t + iH - ((tick - yMin)/(yMax - yMin)) * iH;
+    ctx.beginPath(); ctx.moveTo(l, y); ctx.lineTo(l+iW, y); ctx.stroke();
+    ctx.fillStyle = CLR.text; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(tick.toFixed(tick % 1 === 0 ? 0 : 2), l-6, y+3);
+  });
+
+  /* X labels */
+  xLabels.forEach((lbl, i) => {
+    const x = l + (i/(xLabels.length-1)) * iW;
+    ctx.beginPath(); ctx.moveTo(x, t); ctx.lineTo(x, t+iH); ctx.strokeStyle='rgba(37,42,58,0.5)'; ctx.stroke();
+    ctx.fillStyle = CLR.text; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(lbl, x, t+iH+14);
+  });
+
+  /* Axes */
+  ctx.strokeStyle = '#252a3a'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(l,t); ctx.lineTo(l,t+iH); ctx.lineTo(l+iW,t+iH); ctx.stroke();
+}
+
+function toXY(i, total, val, yMin, yMax, lay) {
+  const {l,t,iW,iH} = lay;
+  return {
+    x: l + (i/(total-1)) * iW,
+    y: t + iH - ((val - yMin)/(yMax - yMin)) * iH
+  };
+}
+
+function niceTicksY(min, max, count) {
+  const range = max - min || 1;
+  const step  = niceCeil(range / count);
+  const start = Math.floor(min / step) * step;
+  const ticks = [];
+  for (let v = start; v <= max + step*0.01; v += step) ticks.push(+v.toFixed(10));
+  return ticks;
+}
+
+function niceCeil(x) {
+  const exp = Math.pow(10, Math.floor(Math.log10(x)));
+  const f   = x / exp;
+  const n   = f < 1.5 ? 1 : f < 3 ? 2 : f < 7 ? 5 : 10;
+  return n * exp;
+}
+
+/* Profile chart with tolerance band */
+function drawProfile(canvas, pos, devs, tolU, segLen) {
+  const {ctx, W, H} = setupCanvas(canvas);
+  const lay = chartLayout(W, H);
+  const {l,t,iW,iH} = lay;
+  const n = devs.length;
+
+  const pad   = tolU * 0.3 || Math.abs(Math.max(...devs) - Math.min(...devs)) * 0.2 || 0.5;
+  const allY  = [...devs, tolU/2, -tolU/2];
+  const yMin  = Math.min(...allY) - pad;
+  const yMax  = Math.max(...allY) + pad;
+  const xLbls = pos.map(p => p % (segLen*2) === 0 || n <= 12 ? p+'mm' : '');
+
+  drawAxes(ctx, W, H, lay, pos.map(p=>p+'mm'), yMin, yMax);
+
+  /* Tolerance band */
+  const yTop = t + iH - ((tolU/2 - yMin)/(yMax-yMin))*iH;
+  const yBot = t + iH - ((-tolU/2 - yMin)/(yMax-yMin))*iH;
+  ctx.fillStyle = 'rgba(239,68,68,0.06)';
+  ctx.fillRect(l, yTop, iW, yBot-yTop);
+  ctx.strokeStyle = 'rgba(239,68,68,0.45)'; ctx.lineWidth = 1;
+  ctx.setLineDash([6,4]);
+  ctx.beginPath(); ctx.moveTo(l, yTop); ctx.lineTo(l+iW, yTop); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(l, yBot); ctx.lineTo(l+iW, yBot); ctx.stroke();
+  ctx.setLineDash([]);
+
+  /* Fill under curve */
+  ctx.beginPath();
+  const p0 = toXY(0,n,devs[0],yMin,yMax,lay);
+  ctx.moveTo(p0.x, t+iH);
+  ctx.lineTo(p0.x, p0.y);
+  for (let i=1;i<n;i++) {
+    const {x,y}=toXY(i,n,devs[i],yMin,yMax,lay);
+    ctx.lineTo(x,y);
+  }
+  const pn = toXY(n-1,n,devs[n-1],yMin,yMax,lay);
+  ctx.lineTo(pn.x, t+iH); ctx.closePath();
+  ctx.fillStyle = CLR.blueFill; ctx.fill();
+
+  /* Line */
+  ctx.beginPath(); ctx.strokeStyle=CLR.blue; ctx.lineWidth=2;
+  for (let i=0;i<n;i++) {
+    const {x,y}=toXY(i,n,devs[i],yMin,yMax,lay);
+    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+
+  /* Points */
+  const maxA = Math.max(...devs.map(Math.abs));
+  for (let i=0;i<n;i++) {
+    const {x,y}=toXY(i,n,devs[i],yMin,yMax,lay);
+    ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2);
+    ctx.fillStyle = Math.abs(devs[i])===maxA ? CLR.amber : CLR.blue;
+    ctx.fill();
+    ctx.strokeStyle='#0d0f14'; ctx.lineWidth=1.5; ctx.stroke();
+  }
+
+  /* Legend */
+  ctx.font='11px sans-serif'; ctx.textAlign='left';
+  [[CLR.blue,'편차 (μm)'],[CLR.red,'공차 한계']].forEach(([c,lbl],i)=>{
+    const lx=l+8+i*110, ly=t+iH+32;
+    ctx.fillStyle=c; ctx.fillRect(lx,ly-7,18,2);
+    ctx.fillStyle=CLR.text2; ctx.fillText(lbl,lx+22,ly);
+  });
+}
+
+/* Generic line chart */
+function drawLine(canvas, pos, vals, color, label, segLen) {
+  const {ctx, W, H} = setupCanvas(canvas);
+  const lay = chartLayout(W, H);
+  const {l,t,iW,iH} = lay;
+  const n = vals.length;
+  const pad = (Math.max(...vals)-Math.min(...vals))*0.2 || 0.5;
+  const yMin = Math.min(...vals)-pad, yMax = Math.max(...vals)+pad;
+
+  drawAxes(ctx, W, H, lay, pos.map(p=>p+'mm'), yMin, yMax);
+
+  /* Fill */
+  const zero = t + iH - ((0-yMin)/(yMax-yMin))*iH;
+  ctx.beginPath();
+  const p0=toXY(0,n,vals[0],yMin,yMax,lay);
+  ctx.moveTo(p0.x, Math.min(Math.max(zero,t),t+iH));
+  ctx.lineTo(p0.x, p0.y);
+  for(let i=1;i<n;i++){const {x,y}=toXY(i,n,vals[i],yMin,yMax,lay);ctx.lineTo(x,y);}
+  const pn=toXY(n-1,n,vals[n-1],yMin,yMax,lay);
+  ctx.lineTo(pn.x,Math.min(Math.max(zero,t),t+iH));
+  ctx.closePath();
+  ctx.fillStyle=color.replace(')',',0.08)').replace('rgb','rgba').replace('#','rgba(')
+    || 'rgba(34,211,238,0.07)';
+  // simple fill approach
+  ctx.fillStyle = color+'18';
+  ctx.fill();
+
+  /* Line */
+  ctx.beginPath(); ctx.strokeStyle=color; ctx.lineWidth=2;
+  for(let i=0;i<n;i++){
+    const {x,y}=toXY(i,n,vals[i],yMin,yMax,lay);
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+
+  /* Points */
+  for(let i=0;i<n;i++){
+    const {x,y}=toXY(i,n,vals[i],yMin,yMax,lay);
+    ctx.beginPath();ctx.arc(x,y,3.5,0,Math.PI*2);
+    ctx.fillStyle=color; ctx.fill();
+    ctx.strokeStyle='#0d0f14';ctx.lineWidth=1.5;ctx.stroke();
+  }
+}
+
+/* Bar chart */
+function drawBar(canvas, pos, devs, segLen) {
+  const {ctx, W, H} = setupCanvas(canvas);
+  const lay = chartLayout(W, H);
+  const {l,t,iW,iH} = lay;
+  const n = devs.length;
+  const pad = (Math.max(...devs.map(Math.abs)))*0.25 || 0.5;
+  const yMin=Math.min(...devs)-pad, yMax=Math.max(...devs)+pad;
+
+  drawAxes(ctx, W, H, lay, pos.map(p=>p+'mm'), yMin, yMax);
+
+  /* Zero line */
+  const zy=t+iH-((0-yMin)/(yMax-yMin))*iH;
+  ctx.strokeStyle='rgba(100,120,150,0.5)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(l,zy);ctx.lineTo(l+iW,zy);ctx.stroke();
+
+  const bw = Math.max(4, iW/n*0.55);
+  for(let i=0;i<n;i++){
+    const cx=l+(i/(n-1))*iW;
+    const yVal=t+iH-((devs[i]-yMin)/(yMax-yMin))*iH;
+    const top=Math.min(yVal,zy), bot=Math.max(yVal,zy);
+    const h=Math.max(2,bot-top);
+    ctx.fillStyle=devs[i]>=0?'rgba(34,197,94,0.7)':'rgba(239,68,68,0.7)';
+    ctx.beginPath();
+    ctx.roundRect(cx-bw/2, top, bw, h, [2]);
+    ctx.fill();
+    ctx.strokeStyle=devs[i]>=0?CLR.green:CLR.red;
+    ctx.lineWidth=1; ctx.stroke();
+  }
+}
+
+/* Init */
+buildGrid();
+</script>
+</body>
+</html>
