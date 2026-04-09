@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>볼스크류 구동계 설계 계산서</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --nv:#0f1f3d;--bl:#1a3a8f;--tl:#0d9488;--gn:#16a34a;--am:#d97706;--rd:#dc2626;
+  --bg:#f0f4fb;--sr:#fff;--bd:#d1daf0;--b2:#e8eef8;
+  --in:#eef4ff;--ca:#edfdf4;--rs:#fffbeb;--mt:#64748b;--ft:#94a3b8;
+  --fs:13px; /* base font size — overridden on mobile */
+}
+html{font-size:var(--fs)}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);min-height:100vh}
+
+/* ── 헤더 ── */
+.hdr{background:var(--nv);color:#fff;padding:0 14px;height:44px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.ht{font-size:13px;font-weight:700;line-height:1.2}
+.hs{font-size:9px;color:#93a8d4;background:rgba(255,255,255,.1);padding:2px 8px;border-radius:20px;white-space:nowrap}
+
+/* ── 탭 ── */
+.tabs{background:var(--nv);display:flex;padding:0 10px;border-top:1px solid rgba(255,255,255,.07);overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tab{padding:8px 12px 7px;font-size:11px;font-weight:500;color:#7a96cc;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;flex-shrink:0}
+.tab.on{color:#fff;border-bottom-color:#60a5fa}
+
+/* ── 페이지 ── */
+.pg{display:none;padding:10px 12px 20px}.pg.on{display:block}
+
+/* ── 카드 ── */
+.cd{background:var(--sr);border-radius:8px;border:1px solid var(--bd);overflow:hidden;margin-bottom:8px}
+.ch{padding:7px 12px;font-size:10px;font-weight:700;letter-spacing:.05em;display:flex;align-items:center;gap:5px;color:#fff}
+.dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.6);flex-shrink:0}
+
+/* ── 폼 테이블 ── */
+.ft{width:100%;border-collapse:collapse}
+.ft tr{border-bottom:1px solid var(--b2)}.ft tr:last-child{border-bottom:none}
+.ft td{padding:5px 8px;vertical-align:middle}
+.lb{font-size:11px;color:var(--mt);background:#fafbff;width:48%;word-break:keep-all}
+.un{font-size:9px;color:var(--ft);width:38px;text-align:right}
+
+/* ── 입력/선택 ── */
+input[type=number],input[type=text]{
+  width:100%;border:none;outline:none;background:var(--in);
+  font-size:13px;padding:5px 7px;border-radius:4px;
+  color:#1a3a8f;font-family:monospace;
+  -webkit-appearance:none;
+}
+select{
+  width:100%;border:none;outline:none;background:var(--in);
+  font-size:12px;padding:5px 7px;border-radius:4px;
+  color:#1a3a8f;cursor:pointer;
+}
+/* 숫자 입력 화살표 제거 (모바일 공간 절약) */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{opacity:.3}
+
+/* ── 결과값 뱃지 ── */
+.cv{font-family:monospace;font-size:12px;color:#059669;background:var(--ca);padding:3px 6px;border-radius:3px;display:inline-block;min-width:80px;text-align:right}
+.rv{font-family:monospace;font-size:12px;font-weight:700;color:#92400e;background:var(--rs);padding:3px 6px;border-radius:3px;display:inline-block;min-width:80px;text-align:right}
+.bdg{display:inline-flex;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:600;font-family:monospace}
+.ok{background:#dcfce7;color:#15803d}.ng{background:#fee2e2;color:#dc2626}.wn{background:#fff7ed;color:#d97706}
+
+/* ── 결과 요약 그리드 ── */
+.sg{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--bd)}
+.sc{background:var(--sr);padding:8px 10px}
+.sl{font-size:9px;color:var(--mt);margin-bottom:2px}
+.sv{font-family:monospace;font-size:15px;font-weight:700;color:var(--nv)}
+.su{font-size:9px;color:var(--ft);margin-left:2px}
+.rb{height:4px;background:var(--b2);border-radius:2px;overflow:hidden;margin-top:3px}
+.rf{height:100%;border-radius:2px;transition:width .3s}
+
+/* ── 차트 ── */
+.cw{height:260px;padding:8px}
+
+/* ── 범례 ── */
+.leg{display:flex;flex-wrap:wrap;gap:6px;padding:0 10px 6px;font-size:10px;color:var(--mt)}
+.li{display:flex;align-items:center;gap:4px}
+.ll{width:14px;height:2px;border-radius:1px}
+
+/* ── 판정 테이블 ── */
+.ot{width:100%;border-collapse:collapse;font-size:10px}
+.ot th{background:#f1f5ff;color:var(--bl);padding:5px 4px;font-weight:600;border-bottom:2px solid var(--bd);text-align:center;font-size:9px}
+.ot td{padding:5px 4px;border-bottom:1px solid var(--b2);text-align:center;font-family:monospace;font-size:10px}
+
+/* ── DB 테이블 ── */
+.dbt{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.dbt table{width:100%;border-collapse:collapse;font-size:10px;white-space:nowrap}
+.dbt th{background:#f1f5ff;color:var(--bl);padding:4px 7px;font-weight:600;border-bottom:2px solid var(--bd);text-align:center}
+.dbt td{padding:3px 7px;border-bottom:1px solid var(--b2);font-family:monospace;text-align:right;font-size:10px}
+.dbt td:first-child{background:#fafbff;font-weight:500;text-align:left}
+
+/* ── 보조 ── */
+.sbh{padding:5px 8px;font-size:10px;font-weight:700;border-bottom:1px solid var(--b2)}
+.tag{font-size:9px;padding:1px 4px;border-radius:3px;background:#e0f2fe;color:#0369a1;font-family:monospace;margin-left:3px}
+.sec-label{font-size:9.5px;font-weight:700;color:var(--bl);letter-spacing:.04em}
+
+/* ── 버튼 공통 ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:8px 16px;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;transition:.15s;-webkit-tap-highlight-color:transparent}
+.btn:active{opacity:.8}
+.btn-add{background:var(--gn);color:#fff;width:100%}
+.btn-del{background:#fee2e2;color:var(--rd);border:1px solid #fca5a5;font-size:10px;padding:3px 8px;border-radius:4px}
+.btn-clr{background:#f1f5ff;color:var(--bl);border:1px solid var(--bd);font-size:11px;padding:6px 14px;border-radius:5px}
+
+/* ── 케이스 이름 입력 영역 ── */
+.addrow{display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-top:1px solid var(--b2);background:#f8fafc}
+.addrow input{font-size:13px;padding:8px 10px;border:1px solid var(--bd);border-radius:6px;background:#fff;color:var(--nv)}
+
+/* ── PC 레이아웃: 2컬럼 ── */
+@media(min-width:768px){
+  .pg{padding:12px 16px 24px}
+  .r2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .r75{display:grid;grid-template-columns:7fr 5fr;gap:12px}
+  .sg{grid-template-columns:repeat(6,1fr)}
+  .cw{height:300px}
+  .addrow{flex-direction:row;align-items:center}
+  .addrow input{flex:1}
+  .btn-add{width:auto;white-space:nowrap}
+  .lb{font-size:11px;width:160px}
+  input[type=number],input[type=text],select{font-size:12px;padding:3px 6px}
+  .ot th{font-size:9.5px}.ot td{font-size:10.5px}
+}
+@media(min-width:1200px){
+  .pg{max-width:1400px;margin:0 auto}
+}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <span class="ht">볼스크류 구동계 설계 계산서</span>
+  <span class="hs">v5</span>
+</div>
+<div class="tabs">
+  <div class="tab on" onclick="sw(event,'calc')">⚙ 계산/선정</div>
+  <div class="tab" onclick="sw(event,'mat')">📊 비교</div>
+  <div class="tab" onclick="sw(event,'db')">🗄 DB</div>
+  <!-- 저장/불러오기 버튼 -->
+  <div style="margin-left:auto;display:flex;align-items:center;gap:6px;padding:0 8px">
+    <span id="autoSaveDot" title="자동저장 대기" style="width:7px;height:7px;border-radius:50%;background:#4ade80;display:inline-block;flex-shrink:0"></span>
+    <button onclick="saveJSON()" title="JSON 파일로 저장" style="padding:3px 10px;background:rgba(255,255,255,.12);color:#93c5fd;border:1px solid rgba(255,255,255,.2);border-radius:4px;font-size:10px;cursor:pointer;white-space:nowrap">💾 저장</button>
+    <label title="JSON 파일 불러오기" style="padding:3px 10px;background:rgba(255,255,255,.12);color:#93c5fd;border:1px solid rgba(255,255,255,.2);border-radius:4px;font-size:10px;cursor:pointer;white-space:nowrap">
+      📂 불러오기<input type="file" accept=".json" onchange="loadJSON(event)" style="display:none">
+    </label>
+  </div>
+</div>
+
+<!-- ══ 계산 탭 ══ -->
+<div class="pg on" id="pg-calc">
+<div class="r75">
+<div>
+  <div class="cd"><div class="ch" style="background:var(--bl)"><div class="dot"></div>볼스크류 스펙</div>
+  <table class="ft"><tbody>
+    <tr><td class="lb">볼스크류 선택 ▼</td><td colspan="2"><select id="bs_s" onchange="onBs()"><option value="">── 직접 입력 ──</option></select></td></tr>
+    <tr><td class="lb">LEAD l</td><td><input type="number" id="bs_l" value="16" onchange="run()"></td><td class="un">mm</td></tr>
+    <tr><td class="lb">골경 dr</td><td><input type="number" id="bs_dr" value="27.15" step="0.001" onchange="run()"></td><td class="un">mm</td></tr>
+    <tr><td class="lb">강구중심경 dm</td><td><input type="number" id="bs_dm" value="33.5" step="0.01" onchange="run()"></td><td class="un">mm</td></tr>
+    <tr><td class="lb">동정격하중 Ca</td><td><input type="number" id="bs_Ca" value="34433" onchange="run()"></td><td class="un">N</td></tr>
+    <tr><td class="lb">너트 마찰토르크 Td</td><td><input type="number" id="bs_Td" value="0.4" step="0.01" onchange="run()"></td><td class="un">N·m</td></tr>
+    <tr><td class="lb">너트 강성 Kn</td><td><input type="number" id="bs_Kn" value="569" onchange="run()"></td><td class="un">N/mm</td></tr>
+    <tr><td class="lb">지지점간거리 Ls</td><td><input type="number" id="bs_Ls" value="615" onchange="run()"></td><td class="un">mm</td></tr>
+    <tr><td class="lb">전체길이 Lsp</td><td><input type="number" id="bs_Lsp" value="762" onchange="run()"></td><td class="un">mm</td></tr>
+    <tr><td class="lb">하중계수 fw</td><td><input type="number" id="bs_fw" value="1.2" step="0.1" onchange="run()"></td><td class="un">—</td></tr>
+    <tr><td class="lb">구동계 효율 η</td><td><input type="number" id="bs_eta" value="0.95" step="0.01" onchange="run()"></td><td class="un">—</td></tr>
+  </tbody></table></div>
+
+  <div class="cd"><div class="ch" style="background:var(--tl)"><div class="dot"></div>이송체 하중</div>
+  <table class="ft"><tbody>
+    <tr><td class="lb">이송체 중량 W</td><td><input type="number" id="W" value="201" onchange="run()"></td><td class="un">kg</td></tr>
+    <tr><td class="lb">경사각도 θ</td><td><input type="number" id="TH" value="90" min="0" max="90" onchange="run()"></td><td class="un">deg</td></tr>
+    <tr><td class="lb">Weight Balance Wb</td><td><input type="number" id="Wb" value="0" onchange="run()"></td><td class="un">kg</td></tr>
+    <tr><td class="lb">정마찰계수 μ₁</td><td><input type="number" id="u1" value="0.01" step="0.001" onchange="run()"></td><td class="un">—</td></tr>
+    <tr><td class="lb">동마찰계수 μ₂</td><td><input type="number" id="u2" value="0.01" step="0.001" onchange="run()"></td><td class="un">—</td></tr>
+    <tr><td class="lb">SlideCover저항 Fe</td><td><input type="number" id="Fe" value="25" onchange="run()"></td><td class="un">N</td></tr>
+    <tr><td class="lb">LM 저항력 Ff</td><td><input type="number" id="Ff" value="80" onchange="run()"></td><td class="un">N</td></tr>
+  </tbody></table></div>
+
+  <div class="cd"><div class="ch" style="background:var(--am)"><div class="dot"></div>속도 및 시정수</div>
+  <table class="ft"><tbody>
+    <tr><td class="lb">급송이송속도 V</td><td><input type="number" id="V" value="60" onchange="run()"></td><td class="un">m/min</td></tr>
+    <tr><td class="lb">가속시간 T1</td><td><input type="number" id="T1" value="0.1" step="0.001" onchange="run()"></td><td class="un">sec</td></tr>
+    <tr><td class="lb">가속시간 T2 (Jerk)</td><td><input type="number" id="T2" value="0.032" step="0.001" onchange="run()"></td><td class="un">sec</td></tr>
+    <tr><td class="lb">감속비 Z</td><td><input type="number" id="Z" value="1" step="0.1" onchange="run()"></td><td class="un">—</td></tr>
+  </tbody></table></div>
+
+  <div class="cd"><div class="ch" style="background:var(--nv)"><div class="dot"></div>모터 / 커플링 / 베어링</div>
+  <table class="ft"><tbody>
+    <tr><td colspan="3" class="sbh" style="background:#eff6ff;color:var(--bl)">모터</td></tr>
+    <tr><td class="lb">모터 선택 ▼</td><td colspan="2"><select id="ms" onchange="onMot()"><option value="">── 선택하세요 ──</option></select></td></tr>
+    <tr><td class="lb">이너시아 Jm <span class="tag">자동</span></td><td><span class="cv" id="rJm">—</span></td><td class="un">kgm²</td></tr>
+    <tr><td class="lb">브레이크 토크 <span class="tag">자동</span></td><td><span class="cv" id="rTb">—</span></td><td class="un">N·m</td></tr>
+    <tr><td colspan="3" class="sbh" style="background:#f0fdf4;color:var(--gn)">커플링</td></tr>
+    <tr><td class="lb">커플링 선택 ▼</td><td colspan="2"><select id="cp_s" onchange="onCp()"><option value="">── 직접 입력 ──</option></select></td></tr>
+    <tr><td class="lb">이너시아 Jc <span class="tag">자동</span></td><td><input type="number" id="Jc" value="0.0003829" step="1e-7" onchange="run()"></td><td class="un">kgm²</td></tr>
+    <tr><td class="lb">비틀림강성 Kct <span class="tag">자동</span></td><td><input type="number" id="Kct" value="9920" onchange="run()"></td><td class="un">Nm/rad</td></tr>
+    <tr><td colspan="3" class="sbh" style="background:#fef9c3;color:#854d0e">모터측 베어링</td></tr>
+    <tr><td class="lb">호칭경 ▼</td><td colspan="2"><select id="bm_size" onchange="onBrgSize('m')"><option value="">── 선택 ──</option></select></td></tr>
+    <tr><td class="lb">조합 ▼</td><td colspan="2"><select id="bm_type" onchange="onBrgType('m')"><option value="">── 선택 ──</option></select></td></tr>
+    <tr><td class="lb">강성 Kb2 <span class="tag">자동</span></td><td><input type="number" id="Kb2" value="1470" onchange="run()"></td><td class="un">N/mm</td></tr>
+    <tr><td class="lb">마찰토크 Tf_m <span class="tag">자동</span></td><td><input type="number" id="Tfm" value="0.31" step="0.01" onchange="run()"></td><td class="un">N·m</td></tr>
+    <tr><td colspan="3" class="sbh" style="background:#fff7ed;color:#9a3412">엔드측 베어링</td></tr>
+    <tr><td class="lb">호칭경 ▼</td><td colspan="2"><select id="be_size" onchange="onBrgSize('e')"><option value="">── 선택 ──</option></select></td></tr>
+    <tr><td class="lb">조합 ▼</td><td colspan="2"><select id="be_type" onchange="onBrgType('e')"><option value="">── 선택 ──</option></select></td></tr>
+    <tr><td class="lb">강성 Kb1 <span class="tag">자동</span></td><td><input type="number" id="Kb1" value="1" onchange="run()"></td><td class="un">N/mm</td></tr>
+    <tr><td class="lb">마찰토크 Tf_e <span class="tag">자동</span></td><td><input type="number" id="Tfe" value="0.1" step="0.01" onchange="run()"></td><td class="un">N·m</td></tr>
+  </tbody></table></div>
+
+  <!-- CYCLE DATA -->
+  <div class="cd"><div class="ch" style="background:#7c3aed"><div class="dot"></div>CYCLE DATA (절삭가공기)</div>
+  <table class="ft"><tbody>
+    <tr><td class="lb">최대절삭력 Fc_max</td><td><input type="number" id="Fc1" value="4260" onchange="run()"></td><td class="un">N</td></tr>
+    <tr><td class="lb">중절삭력 Fc_mid</td><td><input type="number" id="Fc_mid" value="2000" onchange="run()"></td><td class="un">N</td></tr>
+    <tr><td class="lb">상용절삭력 Fc_use</td><td><input type="number" id="Fc2" value="852" onchange="run()"></td><td class="un">N</td></tr>
+    <tr><td class="lb">가공 Feedrate (최대절삭)</td><td><input type="number" id="Vm" value="1.4" step="0.1" onchange="run()"></td><td class="un">m/min</td></tr>
+    <tr><td class="lb">가공 Feedrate (중절삭)</td><td><input type="number" id="Vm2" value="2.0" step="0.1" onchange="run()"></td><td class="un">m/min</td></tr>
+    <tr><td class="lb">가공 Feedrate (상용절삭)</td><td><input type="number" id="Vu" value="3.0" step="0.1" onchange="run()"></td><td class="un">m/min</td></tr>
+    <tr><td colspan="3" class="sbh" style="background:#f5f3ff;color:#7c3aed;font-size:10px">운전 DUTY (sec) — 합계 자동표시</td></tr>
+    <tr><td class="lb">최대절삭 DUTY</td><td><input type="number" id="dt_cut1" value="4" onchange="run()"></td><td class="un">sec</td></tr>
+    <tr><td class="lb">중절삭 DUTY</td><td><input type="number" id="dt_cut2" value="6" onchange="run()"></td><td class="un">sec</td></tr>
+    <tr><td class="lb">상용절삭 DUTY</td><td><input type="number" id="dt_cut3" value="7" onchange="run()"></td><td class="un">sec</td></tr>
+    <tr><td class="lb">급속이송 DUTY</td><td><input type="number" id="dt_rapid" value="5" onchange="run()"></td><td class="un">sec</td></tr>
+    <tr><td class="lb">가감속 DUTY</td><td><input type="number" id="dt_acc" value="5" onchange="run()"></td><td class="un">sec</td></tr>
+    <tr><td class="lb">정지 DUTY</td><td><input type="number" id="dt_stop" value="73" onchange="run()"></td><td class="un">sec</td></tr>
+    <tr><td class="lb" style="font-weight:700;color:var(--nv)">합계 (사이클타임)</td><td><span class="rv" id="rCycle">—</span></td><td class="un">sec</td></tr>
+  </tbody></table></div>
+
+
+</div><!-- /left column -->
+<div>
+  <!-- T-N 곡선 -->
+  <div class="cd">
+    <div class="ch" style="background:var(--nv)"><div class="dot"></div>T-N 특성 곡선 — 2점 모터 선정 판정</div>
+    <div class="cw"><canvas id="tnC"></canvas></div>
+    <div class="leg">
+      <div class="li"><div class="ll" style="background:#1d4ed8;height:2.5px"></div>간헐 정격 Tint</div>
+      <div class="li"><div class="ll" style="background:#059669;height:2px"></div>연속 정격 Tcon</div>
+      <div class="li"><span style="color:#dc2626;font-size:13px">▲</span>최대가속→Tint</div>
+      <div class="li"><span style="color:#d97706;font-size:13px">■</span>연속운전→Tcon</div>
+    </div>
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 8px 10px">
+      <table class="ot">
+        <thead><tr><th>판정</th><th>rpm</th><th>동작(N·m)</th><th>한계(N·m)</th><th>부하율</th><th>결과</th></tr></thead>
+        <tbody id="op-tb"><tr><td colspan="6" style="color:var(--mt);padding:10px;text-align:center">모터를 선택하세요</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 결과 요약 -->
+  <div class="cd">
+    <div class="ch" style="background:var(--gn)"><div class="dot"></div>결과 요약</div>
+    <div class="sg">
+      <div class="sc"><div class="sl">BS 수명</div><div class="sv"><span id="rLh">—</span><span class="su">hr</span></div><div id="rLhB" style="margin-top:2px"></div></div>
+      <div class="sc"><div class="sl">RMS 평균토크</div><div class="sv"><span id="rTm">—</span><span class="su">N·m</span></div><div id="rTmB" style="margin-top:2px"></div></div>
+      <div class="sc"><div class="sl">관성비</div><div class="sv"><span id="rIr">—</span><span class="su">%</span></div><div class="rb"><div class="rf" id="rBar" style="width:0%"></div></div></div>
+      <div class="sc"><div class="sl">복합강성</div><div class="sv"><span id="rKt">—</span><span class="su">N/mm</span></div></div>
+      <div class="sc"><div class="sl">급이송시간</div><div class="sv"><span id="rTt">—</span><span class="su">sec</span></div></div>
+      <div class="sc"><div class="sl">Dm·n</div><div class="sv" style="font-size:12px"><span id="rDn">—</span></div><div id="rDnB" style="margin-top:2px"></div></div>
+    </div>
+    <div class="addrow">
+      <input type="text" id="caseName" placeholder="케이스명 (예: Z축_R3216_HG204SB)">
+      <button class="btn btn-add" onclick="addToMatrix()">📊 비교에 추가</button>
+    </div>
+  </div>
+
+  <!-- 관성 + 단위토크 -->
+  <div class="r2">
+    <div class="cd"><div class="ch" style="background:var(--bl)"><div class="dot"></div>관성 내역</div>
+    <table class="ft"><tbody>
+      <tr><td class="lb">볼스크류 Jbs</td><td><span class="cv" id="rJbs">—</span></td><td class="un">kgm²</td></tr>
+      <tr><td class="lb">이송유닛 Jf</td><td><span class="cv" id="rJf">—</span></td><td class="un">kgm²</td></tr>
+      <tr><td class="lb">커플링 Jc</td><td><span class="cv" id="rJc">—</span></td><td class="un">kgm²</td></tr>
+      <tr><td class="lb">부하 소계</td><td><span class="cv" id="rJl">—</span></td><td class="un">kgm²</td></tr>
+      <tr><td class="lb">모터 Jm</td><td><span class="cv" id="rJm2">—</span></td><td class="un">kgm²</td></tr>
+      <tr><td class="lb">총 이너시아</td><td><span class="rv" id="rJt">—</span></td><td class="un">kgm²</td></tr>
+    </tbody></table></div>
+    <div class="cd"><div class="ch" style="background:var(--bl)"><div class="dot"></div>단위 토르크</div>
+    <table class="ft"><tbody>
+      <tr><td class="lb">중력 Ta</td><td><span class="cv" id="rTa">—</span></td><td class="un">N·m</td></tr>
+      <tr><td class="lb">정마찰 Tb</td><td><span class="cv" id="rTb2">—</span></td><td class="un">N·m</td></tr>
+      <tr><td class="lb">동마찰 Tc</td><td><span class="cv" id="rTc">—</span></td><td class="un">N·m</td></tr>
+      <tr><td class="lb">너트마찰 Td</td><td><span class="cv" id="rTd">—</span></td><td class="un">N·m</td></tr>
+      <tr><td class="lb">자바라 Te</td><td><span class="cv" id="rTe">—</span></td><td class="un">N·m</td></tr>
+      <tr><td class="lb">BRG+모터 Tf</td><td><span class="cv" id="rTf">—</span></td><td class="un">N·m</td></tr>
+      <tr><td class="lb">최대절삭 Tg</td><td><span class="cv" id="rTg">—</span></td><td class="un">N·m</td></tr>
+      <tr><td class="lb">정격절삭 Th</td><td><span class="cv" id="rTh">—</span></td><td class="un">N·m</td></tr>
+      <tr><td class="lb">가감속 Ti</td><td><span class="cv" id="rTi">—</span></td><td class="un">N·m</td></tr>
+    </tbody></table></div>
+  </div>
+
+  <!-- 강성 -->
+  <div class="cd"><div class="ch" style="background:var(--tl)"><div class="dot"></div>이송계 강성</div>
+  <table class="ft"><tbody>
+    <tr><td class="lb">나사축강성 Ks(Ls/2)</td><td><span class="cv" id="rKs">—</span></td><td class="un">N/mm</td></tr>
+    <tr><td class="lb">직선 축계강성 Klin</td><td><span class="cv" id="rKl">—</span></td><td class="un">N/mm</td></tr>
+    <tr><td class="lb">비틀림→축방향 Kt_ax</td><td><span class="cv" id="rKa">—</span></td><td class="un">N/mm</td></tr>
+    <tr><td class="lb">★ 복합 축계강성</td><td><span class="rv" id="rKt2">—</span></td><td class="un">N/mm</td></tr>
+  </tbody></table></div>
+
+  <!-- 3. MOTOR TORQUE 상세표 -->
+  <div class="cd"><div class="ch" style="background:#1e3a5f"><div class="dot"></div>3. MOTOR TORQUE 상세 (11케이스)</div>
+  <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+  <table style="width:100%;border-collapse:collapse;font-size:9.5px;white-space:nowrap">
+    <thead><tr style="background:#f1f5ff">
+      <th style="padding:4px 6px;border-bottom:2px solid var(--bd);color:var(--bl);text-align:left;font-size:9px">운전조건</th>
+      <th style="padding:4px 6px;border-bottom:2px solid var(--bd);color:var(--bl)">수식</th>
+      <th style="padding:4px 6px;border-bottom:2px solid var(--bd);color:var(--bl)">토크(Nm)</th>
+      <th style="padding:4px 6px;border-bottom:2px solid var(--bd);color:var(--bl)">rpm</th>
+      <th style="padding:4px 6px;border-bottom:2px solid var(--bd);color:var(--bl);background:#fef9c3">rev(H)</th>
+      <th style="padding:4px 6px;border-bottom:2px solid var(--bd);color:var(--bl);background:#fef9c3">시간(J)</th>
+      <th style="padding:4px 6px;border-bottom:2px solid var(--bd);color:var(--bl)">부하율</th>
+    </tr></thead>
+    <tbody id="torque-detail-tb">
+      <tr><td colspan="6" style="padding:8px;text-align:center;color:var(--mt)">모터를 선택하세요</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div style="display:flex;gap:12px;padding:6px 10px;background:#f8fafc;border-top:1px solid var(--b2)">
+    <span style="font-size:10px;color:var(--mt)">모타 평균 토크: <strong id="rTm2" style="color:var(--nv)">—</strong> Nm</span>
+    <span style="font-size:10px;color:var(--mt)">가중평균 rpm: <strong id="rNcont" style="color:var(--nv)">—</strong></span>
+  </div>
+  </div>
+
+  <!-- 4. 볼스크류 피로수명 상세 -->
+  <div class="cd"><div class="ch" style="background:#0f4c75"><div class="dot"></div>4. 볼스크류 피로수명</div>
+  <table style="width:100%;border-collapse:collapse;font-size:10px">
+    <thead><tr style="background:#f1f5ff">
+      <th style="padding:4px 6px;border-bottom:2px solid var(--bd);color:var(--bl);text-align:left;font-size:9px">조건</th>
+      <th style="padding:4px 6px;border-bottom:2px solid var(--bd);color:var(--bl)">하중(N)</th>
+      <th style="padding:4px 6px;border-bottom:2px solid var(--bd);color:var(--bl)">rpm</th>
+      <th style="padding:4px 6px;border-bottom:2px solid var(--bd);color:var(--bl)">DUTY</th>
+    </tr></thead>
+    <tbody id="life-detail-tb">
+      <tr><td colspan="4" style="padding:8px;text-align:center;color:var(--mt)">계산 후 표시</td></tr>
+    </tbody>
+  </table>
+  <table class="ft" style="margin-top:1px"><tbody>
+    <tr><td class="lb">평균하중 Fm</td><td><span class="cv" id="rFm">—</span></td><td class="un">N</td></tr>
+    <tr><td class="lb">평균 rpm Nm</td><td><span class="cv" id="rNm">—</span></td><td class="un">rpm</td></tr>
+    <tr><td class="lb">하중계수 fw</td><td><span class="cv" id="rFw">—</span></td><td class="un">—</td></tr>
+    <tr><td class="lb">★ 수명시간 Lh</td><td><span class="rv" id="rLh2">—</span></td><td class="un">hr</td></tr>
+  </tbody></table></div>
+
+  <!-- 5. SHAFT&NUT 검토 -->
+  <div class="cd"><div class="ch" style="background:#064e3b"><div class="dot"></div>5. BALLSCREW SHAFT &amp; NUT 검토</div>
+  <table class="ft"><tbody>
+    <tr><td class="lb">허용압축하중 α×A×11.8×dr²</td><td><span class="cv" id="rFca">—</span></td><td class="un">N</td></tr>
+    <tr><td class="lb">허용좌굴하중</td><td><span class="cv" id="rFbk">—</span></td><td class="un">N</td></tr>
+    <tr><td class="lb">공진허용회전수 (고정-지지)</td><td><span class="cv" id="rNcr1">—</span></td><td class="un">rpm</td></tr>
+    <tr><td class="lb">공진허용회전수 (고정-고정)</td><td><span class="cv" id="rNcr2">—</span></td><td class="un">rpm</td></tr>
+    <tr><td class="lb">★ Dm·n 치</td><td><span class="rv" id="rDn2">—</span></td><td class="un">mm·rpm</td></tr>
+  </tbody></table></div>
+
+  <!-- 6. 추력 검토 -->
+  <div class="cd"><div class="ch" style="background:#1a3a5c"><div class="dot"></div>6. BALLSCREW 추력검토</div>
+  <table class="ft"><tbody>
+    <tr><td class="lb">모터 연속추력 Tm×2π×η/l</td><td><span class="cv" id="rFcont">—</span></td><td class="un">N</td></tr>
+    <tr><td class="lb">모터 최대추력 Tmax×2π×η/l</td><td><span class="cv" id="rFmax">—</span></td><td class="un">N</td></tr>
+  </tbody></table></div>
+
+  <!-- 7. 이송계 강성 상세 -->
+  <div class="cd"><div class="ch" style="background:#134e4a"><div class="dot"></div>7. 이송계 강성검토 상세 (x=Ls/2)</div>
+  <table class="ft"><tbody>
+    <tr><td class="lb">나사축강성 Ks (x=0.1Ls)</td><td><span class="cv" id="rKs01">—</span></td><td class="un">N/mm</td></tr>
+    <tr><td class="lb">나사축강성 Ks (x=Ls/2)</td><td><span class="cv" id="rKs05">—</span></td><td class="un">N/mm</td></tr>
+    <tr><td class="lb">너트 강성 Kn</td><td><span class="cv" id="rKnv">—</span></td><td class="un">N/mm</td></tr>
+    <tr><td class="lb">모터측 베어링 Kb2</td><td><span class="cv" id="rKb2v">—</span></td><td class="un">N/mm</td></tr>
+    <tr><td class="lb">엔드측 베어링 Kb1</td><td><span class="cv" id="rKb1v">—</span></td><td class="un">N/mm</td></tr>
+    <tr><td class="lb">직선 축계강성 Klin (Ls/2)</td><td><span class="cv" id="rKlin2">—</span></td><td class="un">N/mm</td></tr>
+    <tr><td class="lb">커플링 비틀림강성 Kct</td><td><span class="cv" id="rKctv">—</span></td><td class="un">Nm/rad</td></tr>
+    <tr><td class="lb">나사축 비틀림강성 Kt (Ls/2)</td><td><span class="cv" id="rKtv">—</span></td><td class="un">Nm/rad</td></tr>
+    <tr><td class="lb">계 비틀림강성 (Ls/2)</td><td><span class="cv" id="rKsys">—</span></td><td class="un">Nm/rad</td></tr>
+    <tr><td class="lb">비틀림→축방향 Ktax (Ls/2)</td><td><span class="cv" id="rKtax2">—</span></td><td class="un">N/mm</td></tr>
+    <tr><td class="lb">★ 복합 축계강성 Ktol (Ls/2)</td><td><span class="rv" id="rKtol2">—</span></td><td class="un">N/mm</td></tr>
+  </tbody></table></div>
+
+  <!-- 8~10. 길이/가감속/급이송 -->
+  <div class="r2">
+    <div class="cd"><div class="ch" style="background:#1e3a5f"><div class="dot"></div>9. 모터 가감속</div>
+    <table class="ft"><tbody>
+      <tr><td class="lb">T2=a/jerk</td><td><span class="cv" id="rT2calc">—</span></td><td class="un">sec</td></tr>
+      <tr><td class="lb">v2=½a×t2</td><td><span class="cv" id="rv2">—</span></td><td class="un">m/min</td></tr>
+      <tr><td class="lb">등가/감속시 속도 v4</td><td><span class="cv" id="rv4">—</span></td><td class="un">m/min</td></tr>
+      <tr><td class="lb">등가/감속시 시간 t4</td><td><span class="cv" id="rt4">—</span></td><td class="un">sec</td></tr>
+      <tr><td class="lb">JERK 있을시 총가속시간</td><td><span class="cv" id="rTacc_tot">—</span></td><td class="un">sec</td></tr>
+      <tr><td class="lb">★ 토크감속 시작 rpm Vr</td><td><span class="rv" id="rVr">—</span></td><td class="un">rpm</td></tr>
+    </tbody></table></div>
+    <div class="cd"><div class="ch" style="background:#1e3a5f"><div class="dot"></div>10. 급이송 시간</div>
+    <table class="ft"><tbody>
+      <tr style="background:#eff6ff"><td class="lb" style="font-weight:700;color:var(--bl)">▶ 목표이송거리 S</td><td><input type="number" id="stroke_S" value="300" onchange="run()" style="font-weight:700;font-size:14px"></td><td class="un">mm</td></tr>
+      <tr><td class="lb">가/감속 합계거리 (2×St1)</td><td><span class="cv" id="rSt1">—</span></td><td class="un">mm</td></tr>
+      <tr><td class="lb">등속 이송거리 St3</td><td><span class="cv" id="rSt3">—</span></td><td class="un">mm</td></tr>
+      <tr><td class="lb">등속 이송시간 t3</td><td><span class="cv" id="rt3">—</span></td><td class="un">sec</td></tr>
+      <tr><td class="lb" style="font-weight:700;color:var(--nv)">★ 급이송 총시간 t</td><td><span class="rv" id="rTt2">—</span></td><td class="un">sec</td></tr>
+      <tr style="background:#f8fafc"><td colspan="3" style="padding:4px 8px;font-size:9px;color:var(--mt)">t = T1 + T2(Jerk) + t3 + T1</td></tr>
+    </tbody></table></div>
+  </div>
+</div>
+</div></div>
+
+<!-- ══ 비교 탭 ══ -->
+<div class="pg" id="pg-mat">
+<div class="cd">
+  <div class="ch" style="background:var(--nv)">
+    <div class="dot"></div>비교 매트릭스
+    <span style="margin-left:auto;font-size:9px;font-weight:400;color:#93a8d4">⚙ 계산탭 → "📊 비교에 추가"</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--b2);flex-wrap:wrap">
+    <button class="btn-clr" onclick="clearMatrix()">🗑 전체 초기화</button>
+    <span id="matCount" style="font-size:10px;color:var(--mt)">케이스 0개</span>
+  </div>
+  <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 0 8px">
+    <table id="matT" style="width:100%;border-collapse:collapse;font-size:10.5px;white-space:nowrap"></table>
+  </div>
+</div>
+</div>
+
+<!-- ══ DB 탭 ══ -->
+<div class="pg" id="pg-db">
+<div class="r2">
+  <div>
+    <div class="cd"><div class="ch" style="background:var(--bl)"><div class="dot"></div>모터 DB</div><div class="dbt" style="max-height:360px;overflow-y:auto"><table id="dbM"></table></div></div>
+    <div class="cd"><div class="ch" style="background:var(--tl)"><div class="dot"></div>커플링 DB</div><div class="dbt"><table id="dbC"></table></div></div>
+  </div>
+  <div>
+    <div class="cd"><div class="ch" style="background:var(--gn)"><div class="dot"></div>볼스크류 DB</div><div class="dbt"><table id="dbB"></table></div></div>
+    <div class="cd"><div class="ch" style="background:var(--am)"><div class="dot"></div>베어링 DB</div><div class="dbt" style="max-height:360px;overflow-y:auto"><table id="dbR"></table></div></div>
+  </div>
+</div>
+</div>
+
+<script>
+// 모터 DB — DATA 시트 실제값 기준
+// [name, TiN1,TiT1, TiN2,TiT2, TiN3,TiT3,
+//        TcN1,TcT1, TcN2,TcT2, TcN3,TcT3,
+//        Jm, BrkT, FriT, kW]
+const MD=[
+ // FANUC bs HV 시리즈
+ ["bs8/3000i HV",   0,15,1600,15,3000,10, 0,7.0,2000,5.5,2000,0,  0.00120,0,   0.3,1.2],
+ ["bs8/3000iB HV",  0,15,1600,15,3000,10, 0,7.0,2000,5.5,2000,0,  0.00120,8,   0.3,1.2],
+ ["bs12/3000i HV",  0,27,1800,27,3000,19, 0,11.0,2000,9.0,2000,0, 0.00228,0,   0.4,1.8],
+ ["bs12/3000iB HV", 0,27,1800,27,3000,19, 0,11.0,2000,9.0,2000,0, 0.00235,8,   0.4,1.8],
+ ["bs22/3000i HV",  0,45,2000,45,3000,30, 0,20.0,2000,15.0,2000,0,0.00527,0,   0.8,3.0],
+ ["bs22/3000iB HV", 0,45,2000,45,3000,30, 0,20.0,2000,15.0,2000,0,0.00587,22,  0.8,3.0],
+ // FANUC biS 시리즈
+ ["biS8/3000",      0,15,1600,15,3000,10, 0,7.0,2000,5.5,2000,0,  0.00117,0,   0.3,1.2],
+ ["biS8/3000B",     0,15,1600,15,3000,10, 0,7.0,2000,5.5,2000,0,  0.00124,8,   0.3,1.2],
+ ["biS12/2000",     0,21,1200,21,2000,15, 0,10.5,1500,9.0,2000,8, 0.00228,0,   0.4,1.4],
+ ["biS12/2000B",    0,21,1200,21,2000,15, 0,10.5,1500,9.0,2000,8, 0.00235,8,   0.4,1.4],
+ ["biS12/3000",     0,27,1800,27,3000,19, 0,11.0,2000,9.0,2000,0, 0.00228,0,   0.4,1.8],
+ ["biS12/3000B",    0,27,1800,27,3000,19, 0,11.0,2000,9.0,2000,0, 0.00235,8,   0.4,1.8],
+ ["biS22/2000",     0,45,1000,45,2000,27, 0,20.0,2000,12.0,2000,0,0.00527,0,   0.8,2.5],
+ ["biS22/2000B",    0,45,1000,45,2000,27, 0,20.0,2000,12.0,2000,0,0.00587,22,  0.8,2.5],
+ ["biS22/3000",     0,45,2000,45,3000,30, 0,20.0,2000,15.0,2000,0,0.00527,0,   0.8,3.0],
+ ["biS22/3000B",    0,45,2000,45,3000,30, 0,20.0,2000,15.0,2000,0,0.00587,22,  0.8,3.0],
+ ["biS30/2000",     0,68,1500,68,2000,60, 0,27.0,1500,20.0,2000,15,0.00759,0,  0.8,3.0],
+ ["biS30/2000B",    0,68,1500,68,2000,60, 0,27.0,1500,20.0,2000,15,0.00819,22, 0.8,3.0],
+ // FANUC αis 시리즈
+ ["αis8/4000i",     0,32,2100,32,4000,20, 0,8.0,3000,7.0,4000,6,  0.00117,0,   0.3,2.5],
+ ["αis8/4000iB",    0,32,2100,32,4000,20, 0,8.0,3000,7.0,4000,6,  0.00124,8,   0.3,2.5],
+ ["αis12/4000i",    0,46,2100,46,4000,30, 0,12.0,3000,8.0,3000,0, 0.00228,0,   0.3,2.7],
+ ["αis12/4000iB",   0,46,2100,46,4000,30, 0,12.0,3000,8.0,3000,0, 0.00235,8,   0.3,2.7],
+ ["αis22/4000i",    0,76,2000,76,4000,43, 0,22.0,3000,15.0,3000,0,0.00527,0,   0.8,4.5],
+ ["αis22/4000iB",   0,76,2000,76,4000,43, 0,22.0,3000,15.0,3000,0,0.00587,35,  0.8,4.5],
+ ["αis30/4000i",    0,100,2000,100,4000,55,0,30.0,3000,18.0,3000,0,0.00759,0,  0.8,5.5],
+ ["αis30/4000iB",   0,100,2000,100,4000,55,0,30.0,3000,18.0,3000,0,0.00819,35, 0.8,5.5],
+ ["αis40/4000i",    0,115,1500,115,4000,60,0,40.0,3000,18.0,3000,0,0.00990,0,  1.2,5.5],
+ ["αis40/4000iB",   0,115,1500,115,4000,60,0,40.0,3000,18.0,3000,0,0.01080,70, 1.2,5.5],
+ // Mitsubishi HG 시리즈
+ ["HG154",          0,42,1800,42,4000,20, 0,9.0,3000,4.8,3000,0,  0.00178,0,   0.4,1.5],
+ ["HG204S-D48",     0,47,2000,42,4000,20, 0,13.7,2000,9.0,3000,6, 0.00383,0,   0.3,2.0],
+ ["HG204SB-D48",    0,47,2000,42,4000,20, 0,13.7,2000,9.0,3000,6, 0.00479,15.95,0.3,2.0],
+ ["HG224S-D48",     0,46.5,2000,46.5,4000,30,0,12.0,2000,9.0,3000,7,0.00237,0, 0.3,2.2],
+ ["HG224BS-D48",    0,46.5,2000,46.5,4000,30,0,12.0,2000,9.0,3000,7,0.00259,20,0.3,2.2],
+ ["HG303S-D48",     0,64,1500,64,3000,37, 0,22.5,2000,14.3,3000,11,0.00750,0,  0.3,3.0],
+ ["HG303BS-D48",    0,64,1500,64,3000,37, 0,22.5,2000,14.3,3000,11,0.00750,43.1,0.3,3.0],
+ ["HG354S-D48",     0,75,2000,75,4000,37, 0,22.5,2000,16.0,3000,11,0.00750,0,  0.3,3.5],
+ ["HG354BS-D48",    0,75,2000,75,4000,37, 0,22.5,2000,16.0,3000,11,0.00847,35.25,0.3,3.5],
+ // FANUC α F 시리즈
+ ["α12F/4000i",     0,35,2000,35,4000,17, 0,12.0,3000,10.0,3000,0,0.00620,0,   0.8,3.0],
+ ["α12F/4000iB",    0,35,2000,35,4000,17, 0,12.0,3000,10.0,3000,0,0.00680,35,  0.8,3.0],
+ ["α22F/4000i",     0,77,2000,77,4000,42, 0,22.0,3000,12.0,3000,0,0.01200,0,   1.2,4.0],
+ ["α22F/4000iB",    0,77,2000,77,4000,42, 0,22.0,3000,12.0,3000,0,0.01260,35,  1.2,4.0],
+ // QSY EcoDyn 시리즈
+ ["QSY155B EcoDyn", 0,39,2200,39,4200,25, 0,13.0,3000,11.0,3000,0,0.00330,0,   0,3.5],
+ ["QSY155B Brake",  0,39,2200,39,4200,25, 0,13.0,3000,11.0,3000,0,0.00350,40,  0,3.5],
+ ["QSY155C EcoDyn", 0,52,2200,52,4200,37, 0,17.7,3000,16.0,3000,0,0.00430,0,   0,5.0],
+ ["QSY155C Brake",  0,52,2200,52,4200,37, 0,17.7,3000,16.0,3000,0,0.00450,40,  0,5.0],
+ ["QSY155D EcoDyn", 0,64,2300,64,4200,48, 0,21.6,3000,18.1,3000,0,0.00540,0,   0,5.7],
+ ["QSY155D Brake",  0,64,2300,64,4200,48, 0,21.6,3000,18.1,3000,0,0.00560,40,  0,5.7],
+ ["QSY190C EcoDyn", 0,85,1800,85,4200,40, 0,28.0,3000,23.0,3000,0,0.01060,0,   0,7.2],
+ ["QSY190C Brake",  0,85,1800,85,4200,40, 0,28.0,3000,23.0,3000,0,0.01150,70,  0,7.2],
+ ["QSY190D EcoDyn", 0,107,1900,107,4200,55,0,38.0,3000,30.6,3000,0,0.01330,0,  0,9.6],
+ ["QSY190D Brake",  0,107,1900,107,4200,55,0,38.0,3000,30.6,3000,0,0.01420,70, 0,9.6],
+ ["QSY190F EcoDyn", 0,150,1500,150,4200,72,0,47.6,3000,31.5,3000,0,0.01900,0,  0,9.9],
+ ["QSY190F Brake",  0,150,1500,150,4200,72,0,47.6,3000,31.5,3000,0,0.01990,70, 0,9.9],
+];
+const BD=[
+ ["R2016",20,16,3.175,20.5,17.5,  24696,10820,325,0.3,304,0.2,0.95],
+ ["R2020",20,20,3.175,20.5,17.5,  24696,10820,325,0.4,304,0.2,0.95],
+ ["R2516",25,16,3.969,25.5,21.8,  39227,17160,514,0.4,386,0.2,0.95],
+ ["R2520",25,20,3.969,25.5,21.8,  39227,17160,514,0.5,386,0.2,0.95],
+ ["R2816",28,16,4.762,29.5,24.738,53759,23250,696,0.6,530,0.2,0.95],
+ ["R2820",28,20,4.762,29.5,24.738,53759,23250,696,0.7,530,0.2,0.95],
+ ["R3216",32,16,6.35, 33.5,27.15, 76812,34433,1030,0.4,569,0.2,0.95],
+ ["R3220",32,20,6.35, 33.5,27.15, 76812,34433,1030,0.5,569,0.2,0.95],
+ ["R4008",40, 8,6.35, 40.5,35.0,  98000,42000,1260,0.5,700,0.2,0.95],
+ ["R4010",40,10,6.35, 40.5,35.0,  98000,42000,1260,0.6,700,0.2,0.95],
+ ["R4016",40,16,6.35, 41.5,35.5,  98000,44000,1320,0.6,720,0.2,0.95],
+ ["R4020",40,20,6.35, 41.5,35.5,  98000,44000,1320,0.7,720,0.2,0.95],
+ ["R5010",50,10,7.938,51.0,43.8, 147000,63500,1905,0.7,900,0.2,0.95],
+ ["R5016",50,16,7.938,51.0,43.8, 147000,63500,1905,0.8,900,0.2,0.95],
+ ["R5020",50,20,7.938,51.0,43.8, 147000,63500,1905,0.9,900,0.2,0.95],
+];
+const CD=[
+ ["GS24. 98SHA",  120,  5980, 0.0001705],
+ ["GS28. 98SHA",  320,  9920, 0.0003829],
+ ["JK-63-35-25",  200, 250000, 0.000667],
+ ["JK-63-35-32",  260, 320000, 0.000660],
+ ["JK-63-35-35",  280, 350000, 0.000654],
+ ["JKW-63-35-35", 280, 350000, 0.000664],
+ ["IKC-73-40-40", 400, 350000, 0.001400],
+ ["SFC-060SA2",    60,  70000, 0.000209],
+];
+const RD=[
+ // DATA 시트 실제값 기준 (단열 기준 K, Tf)
+ {sz:"6000ZZ",  K:1,    Tf:0.10},
+ {sz:"15_47",   K:750,  Tf:0.14},
+ {sz:"17_47",   K:750,  Tf:0.14},
+ {sz:"20_47",   K:750,  Tf:0.14},
+ {sz:"25_62",   K:1000, Tf:0.23},
+ {sz:"30_62",   K:1030, Tf:0.24},
+ {sz:"35_72",   K:1180, Tf:0.28},
+ {sz:"40_72",   K:1230, Tf:0.28},
+ {sz:"40_90",   K:1320, Tf:0.48},
+ {sz:"45_75",   K:1270, Tf:0.29},
+ {sz:"45_100",  K:1520, Tf:0.58},
+ {sz:"50_100",  K:1570, Tf:0.60},
+ {sz:"55_100",  K:1570, Tf:0.60},
+ {sz:"55_120",  K:1810, Tf:0.64},
+ {sz:"60_120",  K:1810, Tf:0.64},
+];
+// 조합 기호 — DATA 시트 D열 실제 기호 기준
+const BC=[
+ {lbl:">< DF    정면 단열",      code:"DF",  Km:1.00, Tm:1.0},
+ {lbl:"<> DB    배면 단열",      code:"DB",  Km:1.00, Tm:1.0},
+ {lbl:"><<  DFD  정면-배면 2열", code:"DFD", Km:1.47, Tm:2.0},
+ {lbl:"<<>  DBD  배면-정면 2열", code:"DBD", Km:1.47, Tm:2.0},
+ {lbl:">><<  DFF 정면 3열",      code:"DFF", Km:1.96, Tm:3.0},
+ {lbl:"<<>>  DBB 배면 3열",      code:"DBB", Km:1.96, Tm:3.0},
+];
+
+function fillSelects(){
+  const ms=document.getElementById('ms');
+  MD.forEach((m,i)=>ms.add(new Option(m[0],i)));
+  const bs=document.getElementById('bs_s');
+  BD.forEach(b=>bs.add(new Option(b[0],b[0])));
+  const cp=document.getElementById('cp_s');
+  CD.forEach(c=>cp.add(new Option(c[0],c[0])));
+  ['bm_size','be_size'].forEach(id=>{
+    const sel=document.getElementById(id);
+    RD.forEach(r=>sel.add(new Option(r.sz,r.sz)));
+  });
+  ['bm_type','be_type'].forEach(id=>{
+    const sel=document.getElementById(id);
+    BC.forEach(c=>sel.add(new Option(c.lbl,c.code)));
+  });
+}
+function onMot(){
+  const i=parseInt(document.getElementById('ms').value);
+  if(!isNaN(i)&&i>=0){
+    sv('rJm',MD[i][13]);     // Jm
+    sv('rTb',MD[i][14]||0); // BrkT
+  }
+  run();
+}
+function onBs(){const v=document.getElementById('bs_s').value,r=BD.find(x=>x[0]===v);if(!r)return;setV('bs_l',r[2]);setV('bs_dr',r[5]);setV('bs_dm',r[4]);setV('bs_Ca',r[8]);setV('bs_Td',r[9]);setV('bs_Kn',r[10]);run();}
+function onCp(){const v=document.getElementById('cp_s').value,r=CD.find(x=>x[0]===v);if(!r)return;setV('Kct',r[2]);setV('Jc',r[3]);run();}
+function onBrgSize(s){applyBrg(s);}
+function onBrgType(s){applyBrg(s);}
+function applyBrg(s){
+  const sz=document.getElementById(s==='m'?'bm_size':'be_size').value;
+  const ct=document.getElementById(s==='m'?'bm_type':'be_type').value;
+  if(!sz||!ct){run();return;}
+  const base=RD.find(r=>r.sz===sz),combo=BC.find(c=>c.code===ct);
+  if(!base||!combo){run();return;}
+  if(s==='m'){setV('Kb2',Math.round(base.K*combo.Km));setV('Tfm',+(base.Tf*combo.Tm).toFixed(3));}
+  else       {setV('Kb1',Math.round(base.K*combo.Km));setV('Tfe',+(base.Tf*combo.Tm).toFixed(3));}
+  run();
+}
+function setV(id,v){const el=document.getElementById(id);if(el)el.value=v;}
+
+function lerp(p,n){const s=[...p].sort((a,b)=>a[0]-b[0]);if(n<=s[0][0])return s[0][1];if(n>=s[s.length-1][0])return s[s.length-1][1];for(let i=0;i<s.length-1;i++)if(n>=s[i][0]&&n<=s[i+1][0]){const t=(n-s[i][0])/(s[i+1][0]-s[i][0]);return s[i][1]*(1-t)+s[i+1][1]*t;}return 0;}
+function buildCv(m,mx){const ip=[[m[1],m[2]],[m[3],m[4]],[m[5],m[6]]],cp=[[m[7],m[8]],[m[9],m[10]],[m[11],m[12]]],mmax=Math.max(m[5],m[11],1),xm=mx?Math.min(mx,mmax):mmax,ra=Array.from({length:301},(_,i)=>i/300*xm);return{ra,iT:ra.map(n=>lerp(ip,n)),cT:ra.map(n=>lerp(cp,n))};}
+function tF(T,l,e,Z){return T*2*Math.PI*e*Z/(l/1e3);}
+function iAt(ra,fa,rpm){for(let i=0;i<ra.length-1;i++)if(ra[i]<=rpm&&rpm<=ra[i+1]){const t=(rpm-ra[i])/(ra[i+1]-ra[i]);return fa[i]*(1-t)+fa[i+1]*t;}return fa[fa.length-1]||0;}
+
+let CH=null;
+function initChart(){
+  CH = document.getElementById('tnC');
+  // 초기 안내 메시지
+  const ctx = CH.getContext('2d');
+  ctx.fillStyle='#f0f4fb';
+  ctx.fillRect(0,0,CH.width,CH.height);
+  ctx.fillStyle='#94a3b8';
+  ctx.font='12px system-ui';
+  ctx.textAlign='center';
+  ctx.fillText('모터를 선택하면 T-N 곡선이 표시됩니다', CH.width/2, CH.height/2);
+}
+
+function updChart(m, Nr, Tacc, Tcon_op, Ncon){
+  if(!CH) return;
+  const canvas = CH;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const PAD = {top:20, right:20, bottom:42, left:52};
+  const cW = W - PAD.left - PAD.right;
+  const cH = H - PAD.top  - PAD.bottom;
+
+  // 데이터 범위
+  const xMax = Math.ceil(Math.min(Nr*1.5, Math.max(m[5],m[11],1)) / 500) * 500;
+  const ip = [[m[1],m[2]],[m[3],m[4]],[m[5],m[6]]];
+  const cp = [[m[7],m[8]],[m[9],m[10]],[m[11],m[12]]];
+  const pts = 200;
+  const ra  = Array.from({length:pts},(_,i)=>i/(pts-1)*xMax);
+  const iTq = ra.map(n=>lerp(ip,n));
+  const cTq = ra.map(n=>lerp(cp,n));
+  const TintAtNacc = lerp(ip, Nr);
+  const TconAtNcon = lerp(cp, Ncon);
+  const yMax = Math.ceil(Math.max(...iTq, Tacc, Tcon_op)*1.2 / 5)*5 || 10;
+
+  // 좌표 변환
+  const px = x => PAD.left + (x/xMax)*cW;
+  const py = y => PAD.top  + cH - (y/yMax)*cH;
+  const N_acc_x = Math.min(Nr, xMax);
+  const N_con_x = Math.min(Ncon, xMax);
+
+  // 캔버스 초기화
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#ffffff';
+  ctx.fillRect(0,0,W,H);
+
+  // 그리드
+  ctx.strokeStyle='#e8eef8'; ctx.lineWidth=1;
+  const xSteps=5, ySteps=5;
+  for(let i=0;i<=xSteps;i++){
+    const x=px(i/xSteps*xMax);
+    ctx.beginPath();ctx.moveTo(x,PAD.top);ctx.lineTo(x,PAD.top+cH);ctx.stroke();
+  }
+  for(let i=0;i<=ySteps;i++){
+    const y=py(i/ySteps*yMax);
+    ctx.beginPath();ctx.moveTo(PAD.left,y);ctx.lineTo(PAD.left+cW,y);ctx.stroke();
+  }
+
+  // 축 라벨
+  ctx.fillStyle='#64748b'; ctx.font='9px monospace'; ctx.textAlign='center';
+  for(let i=0;i<=xSteps;i++){
+    const val=Math.round(i/xSteps*xMax);
+    ctx.fillText(val>=1000?Math.round(val/100)/10+'k':val, px(i/xSteps*xMax), PAD.top+cH+14);
+  }
+  ctx.textAlign='right';
+  for(let i=0;i<=ySteps;i++){
+    const val=i/ySteps*yMax;
+    ctx.fillText(val>=10?Math.round(val):val.toFixed(1), PAD.left-5, py(i/ySteps*yMax)+3);
+  }
+  // 축 제목
+  ctx.fillStyle='#64748b'; ctx.font='10px system-ui'; ctx.textAlign='center';
+  ctx.fillText('모터 회전수 (rpm)', PAD.left+cW/2, H-4);
+  ctx.save(); ctx.translate(12, PAD.top+cH/2);
+  ctx.rotate(-Math.PI/2); ctx.fillText('토크 T (N·m)',0,0); ctx.restore();
+
+  // 축 테두리
+  ctx.strokeStyle='#d1daf0'; ctx.lineWidth=1.5;
+  ctx.strokeRect(PAD.left, PAD.top, cW, cH);
+
+  // 채움 영역 — Tint
+  ctx.beginPath();
+  ctx.moveTo(px(ra[0]), py(0));
+  ra.forEach((r,i)=>ctx.lineTo(px(r),py(iTq[i])));
+  ctx.lineTo(px(ra[pts-1]), py(0));
+  ctx.closePath();
+  ctx.fillStyle='rgba(29,78,216,0.06)'; ctx.fill();
+
+  // 채움 영역 — Tcon
+  ctx.beginPath();
+  ctx.moveTo(px(ra[0]), py(0));
+  ra.forEach((r,i)=>ctx.lineTo(px(r),py(cTq[i])));
+  ctx.lineTo(px(ra[pts-1]), py(0));
+  ctx.closePath();
+  ctx.fillStyle='rgba(5,150,105,0.05)'; ctx.fill();
+
+  // 간헐 정격 곡선 Tint (실선, 파랑)
+  ctx.beginPath(); ctx.strokeStyle='#1d4ed8'; ctx.lineWidth=2.5; ctx.setLineDash([]);
+  ra.forEach((r,i)=>i===0?ctx.moveTo(px(r),py(iTq[i])):ctx.lineTo(px(r),py(iTq[i])));
+  ctx.stroke();
+
+  // 연속 정격 곡선 Tcon (점선, 초록)
+  ctx.beginPath(); ctx.strokeStyle='#059669'; ctx.lineWidth=2; ctx.setLineDash([6,3]);
+  ra.forEach((r,i)=>i===0?ctx.moveTo(px(r),py(cTq[i])):ctx.lineTo(px(r),py(cTq[i])));
+  ctx.stroke(); ctx.setLineDash([]);
+
+  // 수직 점선 — 최대가속
+  ctx.strokeStyle='rgba(220,38,38,0.3)'; ctx.lineWidth=1.2; ctx.setLineDash([5,4]);
+  ctx.beginPath(); ctx.moveTo(px(N_acc_x),py(0)); ctx.lineTo(px(N_acc_x),py(Math.max(Tacc,TintAtNacc)*1.05)); ctx.stroke();
+  // 수평 점선 — Tacc
+  ctx.strokeStyle='rgba(220,38,38,0.2)'; ctx.lineWidth=1; ctx.setLineDash([3,4]);
+  ctx.beginPath(); ctx.moveTo(px(0),py(Tacc)); ctx.lineTo(px(N_acc_x),py(Tacc)); ctx.stroke();
+
+  // 수직 점선 — 연속운전
+  ctx.strokeStyle='rgba(217,119,6,0.3)'; ctx.lineWidth=1.2; ctx.setLineDash([5,4]);
+  ctx.beginPath(); ctx.moveTo(px(N_con_x),py(0)); ctx.lineTo(px(N_con_x),py(Math.max(Tcon_op,TconAtNcon)*1.05)); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // △ 최대가속 한계 (빈 삼각형, 빨강)
+  const drawTriangle=(x,y,sz,fill,stroke)=>{
+    ctx.beginPath();
+    ctx.moveTo(x,y-sz); ctx.lineTo(x+sz,y+sz*0.6); ctx.lineTo(x-sz,y+sz*0.6); ctx.closePath();
+    ctx.fillStyle=fill; ctx.fill(); ctx.strokeStyle=stroke; ctx.lineWidth=2; ctx.stroke();
+  };
+  drawTriangle(px(N_acc_x), py(TintAtNacc), 8, 'rgba(255,255,255,0.9)', '#dc2626');
+  // △ 최대가속 동작점 (채움 삼각형, 빨강)
+  drawTriangle(px(N_acc_x), py(Tacc), 9, '#dc2626', '#dc2626');
+
+  // □ 연속운전 한계 (빈 사각형, 주황)
+  const drawRect=(x,y,sz,fill,stroke)=>{
+    ctx.beginPath(); ctx.rect(x-sz,y-sz,sz*2,sz*2);
+    ctx.fillStyle=fill; ctx.fill(); ctx.strokeStyle=stroke; ctx.lineWidth=2; ctx.stroke();
+  };
+  drawRect(px(N_con_x), py(TconAtNcon), 7, 'rgba(255,255,255,0.9)', '#d97706');
+  // □ 연속운전 동작점 (채움 사각형, 주황)
+  drawRect(px(N_con_x), py(Tcon_op), 8, '#d97706', '#d97706');
+
+  // 범례 (캔버스 우상단)
+  const leg=[
+    {c:'#1d4ed8', dash:false, lbl:'Tint (간헐 정격)'},
+    {c:'#059669', dash:true,  lbl:'Tcon (연속 정격)'},
+  ];
+  leg.forEach((l,i)=>{
+    const lx=PAD.left+cW-130, ly=PAD.top+10+i*16;
+    ctx.beginPath(); ctx.strokeStyle=l.c; ctx.lineWidth=2;
+    if(l.dash) ctx.setLineDash([5,3]); else ctx.setLineDash([]);
+    ctx.moveTo(lx,ly); ctx.lineTo(lx+22,ly); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle='#334155'; ctx.font='9px system-ui'; ctx.textAlign='left';
+    ctx.fillText(l.lbl, lx+26, ly+3);
+  });
+}
+
+const g=id=>parseFloat(document.getElementById(id).value)||0;
+function sv(id,v,cls='cv'){const el=document.getElementById(id);if(!el)return;el.textContent=typeof v==='number'?(v>=10000?Math.round(v).toLocaleString():v>=100?v.toFixed(1):v.toFixed(3)):String(v);if(cls)el.className=cls;}
+
+function run(){
+  const l=g('bs_l'),dr=g('bs_dr'),dm=g('bs_dm'),Ca=g('bs_Ca'),Td_=g('bs_Td');
+  const Kn=g('bs_Kn'),Ls=g('bs_Ls'),Lsp=g('bs_Lsp'),eta=g('bs_eta'),fw=g('bs_fw')||1.2;
+  const W=g('W'),th=g('TH')*Math.PI/180,Wb=g('Wb'),u1=g('u1'),u2=g('u2'),Fe=g('Fe'),Ff=g('Ff');
+  const Fc1=g('Fc1'),Fc_mid=g('Fc_mid')||g('Fc1')*0.47,Fc2=g('Fc2');
+  const V=g('V'),Vm=g('Vm'),Vm2=g('Vm2')||g('Vm'),Vu=g('Vu'),T1=g('T1'),T2=g('T2'),Z=g('Z');
+  const Jc=g('Jc'),Kct=g('Kct'),Kb2=g('Kb2'),Kb1=g('Kb1'),Tfm=g('Tfm'),Tfe=g('Tfe');
+  // 사이클 DUTY (입력값)
+  const dt_cut1=g('dt_cut1')||4, dt_cut2=g('dt_cut2')||6, dt_cut3=g('dt_cut3')||7;
+  const dt_rapid=g('dt_rapid')||5, dt_acc=g('dt_acc')||5, dt_stop=g('dt_stop')||73;
+  const cycleTotal=dt_cut1+dt_cut2+dt_cut3+dt_rapid+dt_acc+dt_stop;
+  sv('rCycle',cycleTotal);
+  // 목표이송거리
+  const S=g('stroke_S')||300;
+
+  const mi=parseInt(document.getElementById('ms').value);
+  const mot=(!isNaN(mi)&&mi>=0)?MD[mi]:null;
+  const Jm=mot?mot[13]:0;
+
+  // ── 1. 관성 ────────────────────────────────────────────────
+  const Jbs=(Math.PI*7.85e-6*(Lsp/1e3)*(dr/1e3)**4/32)*Z**2;
+  const Jf=W*((l/1e3)/(2*Math.PI))**2*Z**2;
+  const Jl=Jbs+Jf+Jc, Jt=Jl+Jm, iR=Jm>0?Jl/Jm:0;
+  sv('rJbs',Jbs);sv('rJf',Jf);sv('rJc',Jc);sv('rJl',Jl);sv('rJm2',Jm);sv('rJt',Jt,'rv');
+  document.getElementById('rIr').textContent=(iR*100).toFixed(1);
+  const bar=document.getElementById('rBar');
+  bar.style.width=Math.min(iR/3*100,100)+'%';
+  bar.style.background=iR<1?'#16a34a':iR<2?'#d97706':'#dc2626';
+
+  // ── 2. 단위 토크 ───────────────────────────────────────────
+  const Ta=(W-Wb)*9.81*(l/1e3)*Z*Math.sin(th)/(2*Math.PI*eta);
+  const Tb=u1*W*9.81*(l/1e3)*Z*Math.cos(th)/(2*Math.PI*eta);
+  const Tc=u2*W*9.81*(l/1e3)*Z*Math.cos(th)/(2*Math.PI*eta);
+  const Te=(Fe+Ff)*(l/1e3)*Z/(2*Math.PI*eta);
+  const FriT=mot?mot[15]:0;
+  const Tf=Tfm+Tfe+FriT;
+  const Tg=Fc1*(l/1e3)*Z/(2*Math.PI*eta);
+  const Tk=Fc_mid*(l/1e3)*Z/(2*Math.PI*eta);
+  const Th=Fc2*(l/1e3)*Z/(2*Math.PI*eta);
+  const Nr=V*1e3/l*Z;
+  const N_acc_rpm=V*(1-T2/(2*T1))*1e3/l*Z;
+  const Ti=Math.PI*N_acc_rpm*Jt*Z/(30*T1);
+  const Nm1 = Vm*1e3/l*Z;    // 최대절삭 rpm = V(m/min)*1000/l(mm)*Z
+  const Nm2_= Vm2*1e3/l*Z;   // 중절삭 rpm
+  const Nm3 = Vu*1e3/l*Z;    // 상용절삭 rpm
+  sv('rTa',Ta);sv('rTb2',Tb);sv('rTc',Tc);sv('rTd',Td_);sv('rTe',Te);sv('rTf',Tf);
+  sv('rTg',Tg);sv('rTh',Th);sv('rTi',Ti);
+  const Tb_=Ta+Tc+Td_+Te+Tf;  // 급이송 기본토크
+
+  // ── 3. MOTOR TORQUE 11케이스 (엑셀 H/J열 기준) ──────────────
+  // DUTY 입력값 기반
+  const duty_stop=dt_stop, duty_rapid=dt_rapid, duty_acc=dt_acc;
+  const duty_cut1=dt_cut1, duty_cut2=dt_cut2, duty_cut3=dt_cut3;
+
+  // H열=rpm, J열=가중치(rev or sec), 엑셀 동일 구조
+  // ── 엑셀 H열 = 각 구간 rev (rpm × 시간/60), J열 = 가중치(시간비율) ──
+  // 엑셀 예시(X축): 급이송 Nr=3750rpm, duty=5sec → rev = 3750×(5/60) = 312.5
+  // H열값 = rpm × duty_sec / 60
+  // N_cont = Σ(H×J) / ΣJ = Σ(rev×D) / ΣD → 평균 rpm으로 역산: N_cont_rpm = Σrev / Σ(sec/60)
+
+  // 각 케이스별 rpm (토크 계산용)
+  const rpm_stop  = 0;
+  const rpm_rapid = Nr;
+  const rpm_acc   = Nr / 2;
+  const rpm_cut1  = Nm1;
+  const rpm_cut2  = Nm2_;
+  const rpm_cut3  = Nm3;
+
+  // 각 구간 rev = rpm × (duty_sec / 60)
+  const rev_stop   = 0;
+  const rev_rapid  = Nr    * (duty_rapid / 60);
+  const rev_acc    = (Nr/2)* (duty_acc   / 60);
+  const rev_cut1   = Nm1   * (duty_cut1  / 60);
+  const rev_cut2   = Nm2_  * (duty_cut2  / 60);
+  const rev_cut3   = Nm3   * (duty_cut3  / 60);
+
+  const cases11 = [
+    {lbl:'상승(+측) 정지',   fml:'Ta+Tb+Td+Te',         T:Math.abs(Ta+Tb+Td_+Te),        rpm:rpm_stop,  D:duty_stop/2},
+    {lbl:'하강(-측) 정지',   fml:'-Ta+Tb+Td+Te',        T:Math.abs(-Ta+Tb+Td_+Te),       rpm:rpm_stop,  D:duty_stop/2},
+    {lbl:'상승(+측) 급이송', fml:'Ta+Tc+Td+Te+Tf',      T:Math.abs(Ta+Tc+Td_+Te+Tf),     rpm:rpm_rapid, D:duty_rapid/2},
+    {lbl:'하강(-측) 급이송', fml:'-Ta+Tc+Td+Te+Tf',     T:Math.abs(-Ta+Tc+Td_+Te+Tf),    rpm:rpm_rapid, D:duty_rapid/2},
+    {lbl:'상승(+측) 가속중', fml:'T1+Ti',                T:Math.abs(Ta+Tc+Td_+Te+Tf+Ti),  rpm:rpm_acc,   D:duty_acc/4},
+    {lbl:'상승(+측) 감속중', fml:'T1-Ti',                T:Math.abs(Ta+Tc+Td_+Te+Tf-Ti),  rpm:rpm_acc,   D:duty_acc/4},
+    {lbl:'하강(-측) 가속중', fml:'T2+Ti',                T:Math.abs(-Ta+Tc+Td_+Te+Tf+Ti), rpm:rpm_acc,   D:duty_acc/4},
+    {lbl:'하강(-측) 감속중', fml:'T2-Ti',                T:Math.abs(-Ta+Tc+Td_+Te+Tf-Ti), rpm:rpm_acc,   D:duty_acc/4},
+    {lbl:'최대절삭(-)',       fml:'-Ta+Tc+Td+Te+Tf+Tg',  T:Math.abs(-Ta+Tc+Td_+Te+Tf+Tg), rpm:rpm_cut1,  D:duty_cut1},
+    {lbl:'중절삭(-)',         fml:'-Ta+Tc+Td+Te+Tf+Tk',  T:Math.abs(-Ta+Tc+Td_+Te+Tf+Tk), rpm:rpm_cut2,  D:duty_cut2},
+    {lbl:'상용절삭(-)',       fml:'-Ta+Tc+Td+Te+Tf+Th',  T:Math.abs(-Ta+Tc+Td_+Te+Tf+Th), rpm:rpm_cut3,  D:duty_cut3},
+  ];
+  const sumD = cases11.reduce((s,c)=>s+c.D, 0);
+
+  // RMS 평균 토크
+  const T_cont = Math.sqrt(cases11.reduce((s,c)=>s+c.T**2*c.D, 0) / sumD);
+
+  // 가중평균 rpm = Σ(rpm × D) / ΣD  ← 엑셀 Σ(H×J)/ΣJ 와 동일
+  // 정지 duty(73)가 압도적으로 커서 결과는 반드시 Nr보다 낮음
+  const N_cont_rpm = Math.min(
+    cases11.reduce((s,c)=>s+c.rpm*c.D, 0) / sumD,
+    Nr  // 물리적으로 평균rpm이 급이송rpm을 초과할 수 없음
+  );
+  const N_cont_ref = N_cont_rpm;
+
+  const Tmean = T_cont;
+  sv('rTm', Tmean);
+  if(document.getElementById('rTm2')) document.getElementById('rTm2').textContent=Tmean.toFixed(2);
+  if(document.getElementById('rNcont')) document.getElementById('rNcont').textContent=
+    Math.round(N_cont_rpm)+' rpm  (엑셀 ref: '+N_cont_ref.toFixed(1)+')';
+
+  // 모터 선정 판정
+  const ip=mot?[[mot[1],mot[2]],[mot[3],mot[4]],[mot[5],mot[6]]]:null;
+  const cp=mot?[[mot[7],mot[8]],[mot[9],mot[10]],[mot[11],mot[12]]]:null;
+
+  // 11케이스 테이블 (부하율 포함)
+  const dtb=document.getElementById('torque-detail-tb');
+  if(dtb){
+    if(!mot){
+      dtb.innerHTML='<tr><td colspan="6" style="padding:8px;text-align:center;color:var(--mt)">모터를 선택하세요</td></tr>';
+    } else {
+      const rows=cases11.map(c=>{
+        const Tlim = lerp(ip, c.rpm);
+        const ratio = Tlim>0 ? c.T/Tlim*100 : 0;
+        const bcl = ratio>100?'#fee2e2':ratio>80?'#fff7ed':'#dcfce7';
+        const pct = ratio>0 ? ratio.toFixed(0)+'%' : '—';
+        return `<tr>
+          <td style="padding:3px 6px;border-bottom:1px solid var(--b2);font-size:9.5px">${c.lbl}</td>
+          <td style="padding:3px 6px;border-bottom:1px solid var(--b2);text-align:center;font-family:monospace;font-size:9.5px">${c.fml}</td>
+          <td style="padding:3px 6px;border-bottom:1px solid var(--b2);text-align:right;font-family:monospace;font-size:10px;font-weight:600">${c.T.toFixed(2)}</td>
+          <td style="padding:3px 6px;border-bottom:1px solid var(--b2);text-align:right;font-family:monospace;font-size:10px">${Math.round(c.rpm).toLocaleString()}</td>
+          <td style="padding:3px 6px;border-bottom:1px solid var(--b2);text-align:right;font-family:monospace;font-size:10px;background:#fef9c3">${(c.rpm*(c.D/60)).toFixed(1)}</td>
+          <td style="padding:3px 6px;border-bottom:1px solid var(--b2);text-align:right;font-family:monospace;font-size:10px;background:#fef9c3">${c.D}</td>
+          <td style="padding:3px 6px;border-bottom:1px solid var(--b2);text-align:center;font-size:9.5px;background:${bcl};font-weight:700">${pct}</td>
+        </tr>`;
+      });
+      // 합계행
+      rows.push(`<tr style="background:#1e3a5f;color:#fff;font-weight:700">
+        <td style="padding:4px 6px;font-size:9.5px" colspan="2">평균 (RMS토크 / 가중평균rpm)</td>
+        <td style="padding:4px 6px;text-align:right;font-family:monospace;font-size:10px;color:#fde68a">${T_cont.toFixed(2)}</td>
+        <td style="padding:4px 6px;text-align:right;font-family:monospace;font-size:10px;color:#fde68a">${Math.round(N_cont_rpm)}</td>
+        <td style="padding:4px 6px;text-align:right;font-family:monospace;font-size:10px;color:#86efac">${N_cont_ref.toFixed(1)}</td>
+        <td style="padding:4px 6px;text-align:right;font-family:monospace;font-size:10px">${sumD.toFixed(1)}</td>
+        <td style="padding:4px 6px;font-size:9px;color:#93c5fd">엑셀 305.4</td>
+      </tr>`);
+      dtb.innerHTML=rows.join('');
+    }
+  }
+
+  // ── 4. 볼스크류 수명 ───────────────────────────────────────
+  // 피로수명 케이스: 최대절삭/중절삭/상용절삭/급이송
+  const lifeCases=[
+    {lbl:'최대절삭', F:Fc1, N:Nm1, D:duty_cut1},
+    {lbl:'중절삭',   F:Fc_mid, N:Nm2_, D:duty_cut2},
+    {lbl:'상용절삭', F:Fc2, N:Nm3,  D:duty_cut3},
+    {lbl:'급이송',   F:100,    N:Nr,  D:duty_rapid},
+  ];
+  const sumDL=lifeCases.reduce((s,c)=>s+c.D,0);
+  const Fm=Math.pow(lifeCases.reduce((s,c)=>s+c.F**3*c.D,0)/sumDL, 1/3);
+  const Nm_avg=lifeCases.reduce((s,c)=>s+c.N*c.D,0)/sumDL;
+  const Lh=Nm_avg>0?Math.pow(Ca/(fw*Math.max(Fm,1)),3)*1e6/(60*Nm_avg):99999;
+
+  // 수명 테이블
+  const ltb=document.getElementById('life-detail-tb');
+  if(ltb){
+    ltb.innerHTML=lifeCases.map(c=>`<tr>
+      <td style="padding:3px 6px;border-bottom:1px solid var(--b2);font-size:9.5px">${c.lbl}</td>
+      <td style="padding:3px 6px;border-bottom:1px solid var(--b2);text-align:right;font-family:monospace;font-size:10px">${Math.round(c.F).toLocaleString()}</td>
+      <td style="padding:3px 6px;border-bottom:1px solid var(--b2);text-align:right;font-family:monospace;font-size:10px">${Math.round(c.N).toLocaleString()}</td>
+      <td style="padding:3px 6px;border-bottom:1px solid var(--b2);text-align:right;font-family:monospace;font-size:10px">${c.D}</td>
+    </tr>`).join('');
+  }
+  sv('rFm',Fm); sv('rNm',Nm_avg); sv('rFw',fw);
+  sv('rLh2',Lh>=99990?'> 99,999':''+Math.round(Lh).toLocaleString(),'rv');
+  document.getElementById('rLh').textContent=Math.round(Lh).toLocaleString();
+  document.getElementById('rLhB').innerHTML=Lh>20000?'<span class="bdg ok">✓ OK</span>':'<span class="bdg ng">⚠ 확인</span>';
+
+  // ── 5. SHAFT&NUT 검토 ──────────────────────────────────────
+  const As=Math.PI*(dr/1e3)**2/4;
+  const Ip=Math.PI*(dr/1e3)**4/32;
+  const alpha=2.0; // 고정-지지 계수
+  const E=206e9;
+  const Fca=alpha*As*11.8e6*(dr/1e3)**2; // 허용압축하중 α*A*11.8*dr² (N, dr in m)
+  // 실제는 α*E*I*(π/Ls)² 형태이지만 엑셀 기준 간략화
+  const Fbk=alpha*Math.PI**2*E*(Ip)/(Ls/1e3)**2/4; // Euler 좌굴
+  const Ncr1=0.8*60*Math.sqrt(2.0*(dr/1e3)**2*E/(7.85e3*(Ls/1e3)**4*Math.PI**2))/Math.PI*1e3; // 고정-지지
+  const Ncr2=Ncr1*Math.sqrt(4/2); // 고정-고정 (대략 √2 배)
+  const dmn_val=dm*Nr;
+  sv('rFca',Fca/1e3); // kN→ 그냥 N으로
+  sv('rFbk',Fbk);
+  sv('rNcr1',Ncr1);
+  sv('rNcr2',Ncr2);
+  document.getElementById('rDn').textContent=Math.round(dmn_val).toLocaleString();
+  document.getElementById('rDnB').innerHTML=dmn_val<150000?'<span class="bdg ok">✓ 이내</span>':'<span class="bdg ng">⚠ 초과</span>';
+  if(document.getElementById('rDn2')) document.getElementById('rDn2').textContent=Math.round(dmn_val).toLocaleString();
+
+  // ── 6. 추력 검토 ───────────────────────────────────────────
+  if(mot){
+    const Tc_rated=mot[8]; // 정지 연속정격 토크
+    const Ti_rated=mot[2]; // 정지 간헐정격 토크
+    const Fcont_=Tc_rated*2*Math.PI*eta*Z/(l/1e3);
+    const Fmax_=Ti_rated*2*Math.PI*eta*Z/(l/1e3);
+    sv('rFcont',Fcont_); sv('rFmax',Fmax_);
+  }
+
+  // ── 7. 강성 상세 ───────────────────────────────────────────
+  const xh05=Ls/2, xh01=Ls*0.1;
+  // x=Ls/2
+  const Ks1_05=As*1e9*206/(xh05), Ks2_05=As*1e9*206/(Ls-xh05);
+  const Ks1_01=As*1e9*206/(xh01), Ks2_01=As*1e9*206/(Ls-xh01);
+  const Klin05=1/(1/Ks1_05+1/Ks2_05+1/Kn+1/Math.max(Kb1,.001)+1/Math.max(Kb2,.001));
+  const Klin01=1/(1/Ks1_01+1/Ks2_01+1/Kn+1/Math.max(Kb1,.001)+1/Math.max(Kb2,.001));
+  const Kt05=80000*Ip/(xh05/1e3), Ktsys05=1/(1/Kct+1/Kt05);
+  const Ktax05=Ktsys05*(2*Math.PI/(l/1e3))**2;
+  const Ktol05=1/(1/Klin05+1/Ktax05);
+  sv('rKs01',Ks1_01); sv('rKs05',Ks1_05);
+  sv('rKnv',Kn); sv('rKb2v',Kb2); sv('rKb1v',Kb1);
+  sv('rKlin2',Klin05);
+  sv('rKctv',Kct); sv('rKtv',Kt05); sv('rKsys',Ktsys05);
+  sv('rKtax2',Ktax05); sv('rKtol2',Ktol05,'rv');
+  // 기존 요약 갱신
+  sv('rKs',Ks1_05);sv('rKl',Klin05);sv('rKa',Ktax05);sv('rKt',Ktol05,'rv');sv('rKt2',Ktol05,'rv');
+
+  // ── 9. 모터 가감속 ─────────────────────────────────────────
+  const a_acc=V*1e3/60/T1; // 가속도 m/s²
+  const jerk_val=a_acc/T2;
+  const v2=0.5*a_acc*T2;        // m/s → *60 for m/min
+  const v4=(V*1e3/60)-v2*2;     // 등가/감속 속도 m/s
+  const t4=v4/a_acc;
+  const t_total_acc=T2+t4+T2;   // JERK 있을 시 총가속시간
+  const Vr=V*(1-T2/(2*T1))*1e3/l*Z; // 토크감속 시작 rpm
+  sv('rT2calc',T2);
+  sv('rv2',(v2*60).toFixed(1));
+  sv('rv4',(v4*60).toFixed(1));
+  sv('rt4',t4.toFixed(3));
+  sv('rTacc_tot',t_total_acc.toFixed(3));
+  sv('rVr',Math.round(Vr));
+
+  // ── 10. 급이송 시간 (엑셀 기준) ──────────────────────────────
+  // 가/감속 이송거리 = V*T1/2 (삼각형 면적) × 2회 (가속+감속)
+  const Vacc_ms = V*1e3/60;        // 급이송속도 (mm/sec)
+  const St1_ = Vacc_ms * T1 / 2;  // 1회 가/감속 거리 (mm)  엑셀: V*t1/2
+  const St1_2 = St1_ * 2;          // 가속+감속 합계
+  const St3_ = Math.max(S - St1_2, 0); // 등속 이송거리
+  const t3_  = St3_ > 0 ? St3_ / Vacc_ms : 0; // 등속 이송시간 (sec)
+  // 급이송 총시간 = 가속(T1) + Jerk(T2) + 등속(t3) + 감속(T1)
+  const t_feed = T1 + T2 + t3_ + T1;
+  sv('rStroke', S);
+  sv('rSt1',  St1_2.toFixed(1));   // 가속+감속 합계 거리
+  sv('rSt3',  St3_.toFixed(1));
+  sv('rt3',   t3_.toFixed(3));
+  sv('rTt2',  t_feed.toFixed(3), 'rv');
+  sv('rTt',   t_feed.toFixed(3)); // 결과요약 갱신
+
+  // ── T-N 차트 & 2점 판정 ────────────────────────────────────
+  if(mot){
+    sv('rJm',Jm); sv('rTb',mot[14]||0);
+    const N_acc=N_acc_rpm;
+    const T_acc=Tb_+Ti;
+
+    updChart(mot, Nr, T_acc, T_cont, N_cont_rpm);
+
+    const TintAtNacc  = lerp(ip, N_acc);
+    const TconAtNcont = lerp(cp, N_cont_rpm);
+    const r1=TintAtNacc>0?T_acc/TintAtNacc*100:0;
+    const r2=TconAtNcont>0?T_cont/TconAtNcont*100:0;
+    const bc1=r1>100?'ng':r1>80?'wn':'ok';
+    const bc2=T_cont>TconAtNcont?'ng':T_cont>TconAtNcont*0.8?'wn':'ok';
+
+    document.getElementById('op-tb').innerHTML=`
+      <tr style="background:#fef2f2">
+        <td><span style="color:#dc2626;font-size:14px">▲</span> <strong>최대가속</strong><br>
+            <span style="font-size:9px;color:var(--mt)">Tacc = T₁+Ti &nbsp;|&nbsp; Vr (토크감속 시작점)</span></td>
+        <td>${Math.round(N_acc).toLocaleString()}</td>
+        <td style="font-weight:700">${T_acc.toFixed(2)}</td>
+        <td>${TintAtNacc.toFixed(2)} <span style="font-size:9px;color:var(--mt)">(Tint)</span></td>
+        <td><span class="bdg ${bc1}">${r1.toFixed(1)}%</span></td>
+        <td><span class="bdg ${bc1}" style="font-size:11px">${r1<=100?'✓ 가속 가능':'⚠ 가속 불가'}</span></td>
+      </tr>
+      <tr style="background:#fffbeb">
+        <td><span style="color:#d97706;font-size:14px">■</span> <strong>연속운전</strong><br>
+            <span style="font-size:9px;color:var(--mt)">Tcont = RMS 11케이스 &nbsp;|&nbsp; Tcon 곡선과 비교</span></td>
+        <td>${Math.round(N_cont_rpm).toLocaleString()}</td>
+        <td style="font-weight:700">${T_cont.toFixed(2)}</td>
+        <td>${TconAtNcont.toFixed(2)} <span style="font-size:9px;color:var(--mt)">(Tcon)</span></td>
+        <td><span class="bdg ${bc2}">${r2.toFixed(1)}%</span></td>
+        <td><span class="bdg ${bc2}" style="font-size:11px">${T_cont<=TconAtNcont?'✓ 연속운전 가능':'⚠ 연속운전 불가'}</span></td>
+      </tr>`;
+    document.getElementById('rTmB').innerHTML=T_cont<=TconAtNcont?
+      '<span class="bdg ok">✓ 이내</span>':'<span class="bdg ng">⚠ 초과</span>';
+  }
+  schedSave();
+}
+
+function sw(e,n){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));e.currentTarget.classList.add('on');document.getElementById('pg-'+n).classList.add('on');if(n==='mat')buildMatrix();}
+
+// ── 비교매트릭스 케이스 저장소 ─────────────────────────────
+let matCases = [];  // [{name, data}]
+
+// 현재 계산 결과를 매트릭스에 추가
+function addToMatrix() {
+  const name = (document.getElementById('caseName').value.trim()) ||
+    `케이스${matCases.length + 1}`;
+  const mi = parseInt(document.getElementById('ms').value);
+  const mot = (!isNaN(mi)&&mi>=0) ? MD[mi] : null;
+
+  // 현재 표시된 결과값 수집
+  const get = id => {
+    const el = document.getElementById(id);
+    if (!el) return '—';
+    return el.textContent || el.innerText || '—';
+  };
+
+  // 2점 판정 결과 수집 (op-tb에서 파싱)
+  const rows = document.querySelectorAll('#op-tb tr');
+  let accT='—', accN='—', accR='—', accJ='—';
+  let contT='—', contN='—', contR='—', contJ='—';
+  if (rows[0] && rows[0].cells.length >= 6) {
+    accN  = rows[0].cells[1]?.textContent?.trim() || '—';
+    accT  = rows[0].cells[2]?.textContent?.trim() || '—';
+    accR  = rows[0].cells[4]?.textContent?.trim() || '—';
+    accJ  = rows[0].cells[5]?.textContent?.trim() || '—';
+  }
+  if (rows[1] && rows[1].cells.length >= 6) {
+    contN = rows[1].cells[1]?.textContent?.trim() || '—';
+    contT = rows[1].cells[2]?.textContent?.trim() || '—';
+    contR = rows[1].cells[4]?.textContent?.trim() || '—';
+    contJ = rows[1].cells[5]?.textContent?.trim() || '—';
+  }
+
+  const caseData = {
+    name,
+    motor:   mot ? mot[0] : '—',
+    bs:      document.getElementById('bs_s').value || `l${document.getElementById('bs_l').value}`,
+    V:       document.getElementById('V').value,
+    Lh:      get('rLh'),
+    Tmean:   get('rTm'),
+    IR:      get('rIr'),
+    Ktol:    get('rKt'),
+    Tt:      get('rTt'),
+    Dmn:     get('rDn'),
+    Jbs:     get('rJbs'),
+    Jf:      get('rJf'),
+    Jt:      get('rJt'),
+    Ta:      get('rTa'),
+    Tc:      get('rTc'),
+    Ti:      get('rTi'),
+    Tg:      get('rTg'),
+    Th:      get('rTh'),
+    Tf:      get('rTf'),
+    accN, accT, accR, accJ,
+    contN, contT, contR, contJ,
+  };
+
+  matCases.push(caseData);
+  document.getElementById('caseName').value = '';
+
+  // 매트릭스 탭으로 이동하며 빌드
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab')[1].classList.add('on');
+  document.getElementById('pg-mat').classList.add('on');
+  buildMatrix();
+}
+
+function clearMatrix() {
+  if (matCases.length === 0) return;
+  if (!confirm('비교 매트릭스를 초기화할까요?')) return;
+  matCases = [];
+  buildMatrix();
+}
+
+function deleteCase(idx) {
+  matCases.splice(idx, 1);
+  buildMatrix();
+}
+
+function buildMatrix() {
+  const t = document.getElementById('matT');
+  const cnt = document.getElementById('matCount');
+  cnt.textContent = `케이스 ${matCases.length}개`;
+
+  if (matCases.length === 0) {
+    t.innerHTML = `<tr><td colspan="2" style="padding:40px;text-align:center;color:var(--mt);font-size:12px">
+      ⚙ 계산/모터선정 탭에서 계산 후 <strong>"📊 비교에 추가"</strong> 버튼을 누르세요</td></tr>`;
+    return;
+  }
+
+  const th0 = 'background:var(--nv);color:#fff;padding:5px 10px;font-size:10px;font-weight:600;border:1px solid #2a3a5a;white-space:nowrap;text-align:left;position:sticky;left:0;z-index:2';
+  const th1 = 'background:var(--bl);color:#fff;padding:5px 10px;font-size:10px;font-weight:600;border:1px solid #2a3a5a;text-align:center;white-space:nowrap;min-width:130px';
+  const td0 = 'padding:5px 10px;background:#fafbff;font-size:10px;font-weight:600;border:1px solid var(--b2);white-space:nowrap;position:sticky;left:0;z-index:1';
+  const tdc = 'padding:5px 10px;font-family:monospace;font-size:10.5px;text-align:center;border:1px solid var(--b2)';
+  const sec = 'padding:4px 10px;font-size:9.5px;font-weight:700;border:1px solid var(--b2);letter-spacing:.04em;position:sticky;left:0';
+
+  // 판정 색상 헬퍼
+  const okNg = (v, badOver, warnOver) => {
+    const n = parseFloat(v);
+    if (isNaN(n)) return tdc;
+    if (badOver  !== undefined && n > badOver)  return tdc+';background:#fee2e2;color:#dc2626;font-weight:700';
+    if (warnOver !== undefined && n > warnOver) return tdc+';background:#fff7ed;color:#d97706;font-weight:700';
+    return tdc+';background:#dcfce7;color:#15803d;font-weight:700';
+  };
+  const okNgUnder = (v, badUnder, warnUnder) => {
+    const n = parseFloat((v||'').replace(/,/g,''));
+    if (isNaN(n)) return tdc;
+    if (badUnder  !== undefined && n < badUnder)  return tdc+';background:#fee2e2;color:#dc2626;font-weight:700';
+    if (warnUnder !== undefined && n < warnUnder) return tdc+';background:#fff7ed;color:#d97706;font-weight:700';
+    return tdc+';background:#dcfce7;color:#15803d;font-weight:700';
+  };
+  const jStyle = v => v && v.includes('✓') ?
+    tdc+';background:#dcfce7;color:#15803d;font-weight:700' :
+    v && v.includes('⚠') ? tdc+';background:#fee2e2;color:#dc2626;font-weight:700' : tdc;
+
+  const rows = [
+    // [label, key, styleFn]
+    ['__SEC__', '▷ 기본 스펙'],
+    ['모터',             'motor',  null],
+    ['볼스크류',         'bs',     null],
+    ['급이송속도 V (m/min)', 'V',  null],
+    ['__SEC__', '▷ 2점 모터 선정 판정'],
+    ['▲ 최대가속 rpm',  'accN',   null],
+    ['▲ 최대가속 토크 Tacc (N·m)', 'accT', null],
+    ['▲ 부하율 (%)',    'accR',   (v)=>okNg(v,100,80)],
+    ['▲ 가속 판정',     'accJ',   (v)=>jStyle(v)],
+    ['■ 연속가공 rpm',  'contN',  null],
+    ['■ 연속가공 토크 Tcont (N·m)', 'contT', null],
+    ['■ 부하율 (%)',    'contR',  (v)=>okNg(v,100,80)],
+    ['■ 연속 판정',     'contJ',  (v)=>jStyle(v)],
+    ['__SEC__', '▷ 수명 / 강성'],
+    ['BS 수명 Lh (hr)', 'Lh',     (v)=>okNgUnder(v,20000,30000)],
+    ['RMS 평균토크 (N·m)', 'Tmean', null],
+    ['관성비 (%)',       'IR',     (v)=>okNg(v,300,200)],
+    ['복합강성 Ktol (N/mm)', 'Ktol', (v)=>okNgUnder(v,100,150)],
+    ['급이송 총시간 (sec)', 'Tt',  null],
+    ['Dm·n 치',          'Dmn',   (v)=>okNg(v,150000)],
+    ['__SEC__', '▷ 관성 내역'],
+    ['볼스크류 Jbs (kgm²)', 'Jbs', null],
+    ['이송유닛 Jf (kgm²)',  'Jf',  null],
+    ['총 이너시아 Jt (kgm²)', 'Jt', null],
+    ['__SEC__', '▷ 단위 토크'],
+    ['중력 Ta (N·m)',    'Ta',    null],
+    ['동마찰 Tc (N·m)', 'Tc',    null],
+    ['BRG+모터 Tf (N·m)', 'Tf',  null],
+    ['최대절삭 Tg (N·m)', 'Tg',  null],
+    ['정격절삭 Th (N·m)', 'Th',  null],
+    ['가감속 Ti (N·m)',  'Ti',    null],
+  ];
+
+  let html = '<thead><tr>';
+  html += `<th style="${th0}">평가항목</th>`;
+  matCases.forEach((c,i) => {
+    html += `<th style="${th1}">${c.name}<br>
+      <span style="font-weight:400;font-size:9px;cursor:pointer;color:#fca5a5" onclick="deleteCase(${i})">✕ 삭제</span></th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  rows.forEach(([label, key, styleFn]) => {
+    if (key === '__SEC__') {
+      // 섹션 헤더 (label = 실제 섹션명, key = '▷...')
+      // 여기서 label이 '__SEC__', key가 실제 섹션 텍스트
+      html += `<tr><td colspan="${matCases.length+1}" style="${sec};background:#e8eef8;color:var(--bl)">${key}</td></tr>`;
+      return;
+    }
+    html += `<tr><td style="${td0}">${label}</td>`;
+    matCases.forEach(c => {
+      const v = c[key] || '—';
+      const st = styleFn ? styleFn(v) : tdc;
+      html += `<td style="${st}">${v}</td>`;
+    });
+    html += '</tr>';
+  });
+
+  html += '</tbody>';
+  t.innerHTML = html;
+}
+
+function dbT(id,hdrs,rows){
+  const ts='background:#f1f5ff;color:#1a3a8f;padding:4px 7px;font-weight:600;border-bottom:2px solid #d1daf0;text-align:center;font-size:10px';
+  const td='padding:3px 7px;border-bottom:1px solid #e8eef8;font-family:monospace;text-align:right;font-size:10px';
+  const t0='padding:3px 7px;border-bottom:1px solid #e8eef8;font-size:10px;background:#fafbff;font-weight:500';
+  document.getElementById(id).innerHTML=`<thead><tr>${hdrs.map(h=>`<th style="${ts}">${h}</th>`).join('')}</tr></thead><tbody>${rows.map((r,ri)=>`<tr style="background:${ri%2?'#fff':'#fafcff'}">${r.map((c,ci)=>`<td style="${ci===0?t0:td}">${typeof c==='number'&&c<0.01&&c>0?c.toExponential(2):c}</td>`).join('')}</tr>`).join('')}</tbody>`;
+}
+
+function buildDbBrg(){
+  const ts='background:#f1f5ff;color:#1a3a8f;padding:4px 7px;font-weight:600;border-bottom:2px solid #d1daf0;text-align:center;font-size:10px';
+  const td='padding:3px 7px;border-bottom:1px solid #e8eef8;font-family:monospace;text-align:right;font-size:10px';
+  const t0='padding:3px 7px;border-bottom:1px solid #e8eef8;font-size:10px;background:#fafbff;font-weight:500';
+  const hdrs=['호칭경','기호','조합명','강성(N/mm)','마찰토크(Nm)'];
+  const rows=[];
+  RD.forEach(b=>BC.forEach(c=>{rows.push([b.sz,c.lbl.split(' ')[0],c.code,Math.round(b.K*c.Km),(b.Tf*c.Tm).toFixed(3)]);}));
+  document.getElementById('dbR').innerHTML=`<thead><tr>${hdrs.map(h=>`<th style="${ts}">${h}</th>`).join('')}</tr></thead><tbody>${rows.map((r,ri)=>`<tr style="background:${ri%2?'#fff':'#fafcff'}">${r.map((c,ci)=>`<td style="${ci<=2?t0:td}">${c}</td>`).join('')}</tr>`).join('')}</tbody>`;
+}
+
+function resizeCanvas(){
+  const c=document.getElementById('tnC');
+  if(!c)return;
+  c.width=c.parentElement.clientWidth||400;
+  c.height=260;
+}
+
+fillSelects();
+resizeCanvas();
+initChart();
+buildMatrix();
+dbT('dbM',['모터명','TiN1','TiT1','TiN2','TiT2','TiN3','TiT3','TcN1','TcT1','TcN2','TcT2','TcN3','TcT3','Jm(kgm²)','BrkT(Nm)','FriT(Nm)','kW'],MD);
+dbT('dbB',['규격','D','l','Dw','dm','dr','Coa','Ca','예압','Td','Kn','k','η'],BD);
+dbT('dbC',['커플링명','최대토크(Nm)','Kct(Nm/rad)','Jc(kgm²)'],CD);
+buildDbBrg();
+
+// ── 저장 대상 input/select ID 목록 ────────────────────────────
+const SAVE_IDS = [
+  'bs_l','bs_dr','bs_dm','bs_Ca','bs_Td','bs_Kn','bs_Ls','bs_Lsp','bs_fw','bs_eta',
+  'W','TH','Wb','u1','u2','Fe','Ff','Fc1','Fc_mid','Fc2',
+  'V','Vm','Vm2','Vu','T1','T2','Z',
+  'dt_cut1','dt_cut2','dt_cut3','dt_rapid','dt_acc','dt_stop',
+  'stroke_S',
+  'ms','cp_s','bs_s',
+  'Jc','Kct',
+  'bm_size','bm_type','Kb2','Tfm',
+  'be_size','be_type','Kb1','Tfe',
+];
+
+// ── localStorage 자동저장 ─────────────────────────────────────
+const LS_KEY = 'bs_calc_v5';
+
+function collectState() {
+  const state = { inputs:{}, matCases:[] };
+  SAVE_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) state.inputs[id] = el.value;
+  });
+  state.matCases = matCases;
+  return state;
+}
+
+function applyState(state) {
+  if (!state) return;
+  if (state.inputs) {
+    SAVE_IDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && state.inputs[id] !== undefined) el.value = state.inputs[id];
+    });
+  }
+  if (state.matCases) {
+    matCases = state.matCases;
+    buildMatrix();
+  }
+}
+
+function autoSave() {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(collectState()));
+    const dot = document.getElementById('autoSaveDot');
+    if (dot) { dot.style.background='#4ade80'; dot.title='자동저장 완료'; }
+  } catch(e) {}
+}
+
+// 모든 입력 변화 감지 → 자동저장
+let saveTimer = null;
+function schedSave() {
+  clearTimeout(saveTimer);
+  const dot = document.getElementById('autoSaveDot');
+  if (dot) { dot.style.background='#fbbf24'; dot.title='저장 중...'; }
+  saveTimer = setTimeout(autoSave, 800);
+}
+
+
+// ── JSON 파일로 저장 ──────────────────────────────────────────
+function saveJSON() {
+  const state = collectState();
+  state.savedAt = new Date().toLocaleString('ko-KR');
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const d = new Date();
+  const ts = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}_${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}`;
+  a.download = `bs_calc_${ts}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  const dot = document.getElementById('autoSaveDot');
+  if (dot) { dot.style.background='#818cf8'; dot.title='파일 저장 완료'; }
+  setTimeout(()=>{ if(dot) dot.style.background='#4ade80'; }, 2000);
+}
+
+// ── JSON 파일 불러오기 ────────────────────────────────────────
+function loadJSON(evt) {
+  const file = evt.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const state = JSON.parse(e.target.result);
+      applyState(state);
+      // 드롭다운 연동 재실행
+      const bsEl = document.getElementById('bs_s');
+      if (bsEl && bsEl.value) onBs();
+      const cpEl = document.getElementById('cp_s');
+      if (cpEl && cpEl.value) onCp();
+      const msEl = document.getElementById('ms');
+      if (msEl && msEl.value !== '') onMot(); else run();
+      ['m','e'].forEach(s => {
+        const sz = document.getElementById(s==='m'?'bm_size':'be_size');
+        const ct = document.getElementById(s==='m'?'bm_type':'be_type');
+        if (sz && sz.value && ct && ct.value) applyBrg(s);
+      });
+      autoSave();
+      alert(`✅ 불러오기 완료!\n저장 시각: ${state.savedAt||'알 수 없음'}\n비교 케이스: ${(state.matCases||[]).length}개`);
+    } catch(err) {
+      alert('❌ 파일 읽기 실패: ' + err.message);
+    }
+    evt.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// ── 초기 실행 ─────────────────────────────────────────────────
+// localStorage 복원 시도
+try {
+  const saved = localStorage.getItem(LS_KEY);
+  if (saved) {
+    const state = JSON.parse(saved);
+    applyState(state);
+    const bsEl = document.getElementById('bs_s');
+    if (bsEl && bsEl.value) onBs();
+    const cpEl = document.getElementById('cp_s');
+    if (cpEl && cpEl.value) onCp();
+    const msEl = document.getElementById('ms');
+    if (msEl && msEl.value !== '') onMot(); else run();
+    ['m','e'].forEach(s => {
+      const sz = document.getElementById(s==='m'?'bm_size':'be_size');
+      const ct = document.getElementById(s==='m'?'bm_type':'be_type');
+      if (sz && sz.value && ct && ct.value) applyBrg(s);
+    });
+  } else {
+    // 초기값으로 시작
+    const idx = MD.findIndex(m=>m[0]==='αis12/4000iB');
+    if (idx>=0) { document.getElementById('ms').value=idx; onMot(); } else run();
+  }
+} catch(e) {
+  const idx = MD.findIndex(m=>m[0]==='αis12/4000iB');
+  if (idx>=0) { document.getElementById('ms').value=idx; onMot(); } else run();
+}
+</script>
+</body>
+</html>
